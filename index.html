@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Mabar Pro - Ultimate Edition</title>
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap');
+        :root { --primary: #4F46E5; --secondary: #10B981; --danger: #EF4444; --bg: #F3F4F6; --card: #FFFFFF; --text: #1F2937; --gold: #F59E0B; --purple: #8B5CF6; }
+        body { font-family: 'Poppins', sans-serif; background-color: var(--bg); color: var(--text); display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 10px; box-sizing: border-box; }
+        .container { background: var(--card); border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); padding: 20px; width: 100%; max-width: 450px; text-align: center; position: relative; }
+        .server-status { position: absolute; top: 15px; right: 20px; font-size: 10px; font-weight: 600; display: flex; align-items: center; gap: 5px; color: #6B7280; }
+        .lang-toggle { position: absolute; top: 10px; left: 15px; font-size: 20px; cursor: pointer; padding: 5px; }
+        .status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--danger); animation: pulse 1.5s infinite; } .status-dot.online { background: var(--secondary); animation: none; }
+        @keyframes pulse { 0% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.5); opacity: 0.5; } 100% { transform: scale(1); opacity: 1; } }
+        h1 { color: var(--primary); font-weight: 800; margin: 15px 0 20px 0; font-size: 24px; }
+        .screen { display: none; } .screen.active { display: block; animation: fadeIn 0.3s; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        input, select { width: 100%; padding: 10px; margin-bottom: 12px; border: 2px solid #E5E7EB; border-radius: 10px; font-family: inherit; box-sizing: border-box; text-align: center; font-size:14px; }
+        button { width: 100%; padding: 10px; background: var(--primary); color: white; border: none; border-radius: 10px; font-weight: 600; font-size: 15px; cursor: pointer; transition: 0.2s; margin-bottom: 10px; font-family: inherit; }
+        button:hover { filter: brightness(0.9); } button:active { transform: scale(0.98); }
+        button.btn-green { background: var(--secondary); } button.btn-gray { background: #9CA3AF; } button.btn-danger { background: var(--danger); } button.btn-gold { background: var(--gold); } button.btn-purple { background: var(--purple); }
+        
+        /* Modal Custom */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: none; justify-content: center; align-items: center; z-index: 1000; }
+        .modal-box { background: #fff; padding: 20px; border-radius: 15px; width: 85%; max-width: 350px; text-align: center; animation: popIn 0.3s; max-height: 80vh; overflow-y: auto;}
+        @keyframes popIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        
+        .avatar-selection { display: flex; justify-content: center; gap: 10px; margin-bottom: 15px; } .avatar-opt { width: 45px; height: 45px; border-radius: 50%; border: 3px solid transparent; cursor: pointer; opacity: 0.5;} .avatar-opt.selected { border-color: var(--primary); opacity: 1; transform: scale(1.1); } .avatar-opt img { width: 100%; height: 100%; border-radius: 50%; }
+        .room-list { max-height: 200px; overflow-y: auto; text-align: left; margin-bottom: 15px; } .room-item { background: #F9FAFB; border: 1px solid #E5E7EB; padding: 10px; border-radius: 10px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; } .room-item .room-name { font-weight: 600; font-size: 14px;} .room-item button { width: auto; margin: 0; padding: 6px 12px; font-size: 12px; }
+        .player-list { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-bottom: 15px; }
+        .player-badge { background: #EEF2FF; padding: 5px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; display: flex; align-items: center; gap: 5px; border: 1px solid #C7D2FE;} .player-badge img { width: 20px; height: 20px; border-radius: 50%; }
+        
+        /* Game UI */
+        .score-board { display: flex; justify-content: space-between; background: #EEF2FF; padding: 10px; border-radius: 10px; margin-bottom: 10px; font-size: 12px; border: 1px solid #C7D2FE; align-items: center;}
+        .player-info { display: flex; align-items: center; gap: 5px; flex-direction: column; } .player-info img { width: 30px; height: 30px; border-radius: 50%; border: 2px solid var(--primary);} .player-info span { font-weight: bold; color: var(--primary); font-size: 11px;}
+        .timer-info { text-align: center; font-weight: 800; color: var(--danger); font-size: 22px;}
+        .role-badge { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; margin-bottom: 10px;} .role-drawer { background: #FEE2E2; color: #B91C1C; } .role-guesser { background: #D1FAE5; color: #047857; }
+        
+        #slotMachine { font-size: 20px; font-weight: 800; color: var(--primary); height: 35px; overflow: hidden; display: flex; align-items: center; justify-content: center; background: #EEF2FF; border-radius: 10px; margin-bottom:10px;}
+        .canvas-container { position: relative; margin-bottom: 10px; }
+        #gameCanvas { background: #fff; border: 2px solid #E5E7EB; border-radius: 12px; cursor: crosshair; touch-action: none; width: 100%; aspect-ratio: 4/5; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .toolbar { display: flex; flex-wrap: wrap; gap: 5px; justify-content: center; margin-bottom: 10px; padding: 5px; background: #F9FAFB; border-radius: 10px; }
+        .tool-btn { width: auto; padding: 5px 15px; margin:0; font-size: 12px; background: #E5E7EB; color: var(--text); border-radius: 20px;} .tool-btn.active { background: var(--primary); color: white; }
+        .color-palette { display: flex; flex-wrap: wrap; gap: 5px; justify-content: center; margin-bottom: 10px; }
+        .color-btn { width: 25px; height: 25px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; } .color-btn.active { border-color: #000; transform: scale(1.2); }
+        
+        .chat-box { background: #F9FAFB; padding: 10px; border-radius: 10px; height: 110px; overflow-y: auto; text-align: left; font-size: 13px; margin-bottom: 10px; border: 1px solid #E5E7EB;}
+        .chat-msg { border-bottom: 1px solid #eee; padding: 5px 0; } .chat-msg img { width: 20px; height: 20px; border-radius: 50%; vertical-align: middle; margin-right: 5px; } .sys-msg { color: var(--primary); font-style: italic; font-weight: bold; text-align: center; }
+        
+        .gallery-item { border: 2px solid #E5E7EB; border-radius: 10px; margin-bottom: 15px; padding: 10px; background: #FAFAFA; } .gallery-item img { width: 100%; border-radius: 8px; border: 1px solid #ccc; }
+        .star-rating { color: #ccc; font-size: 24px; cursor: pointer; display:flex; justify-content:center; gap:5px;} .star-rating .checked { color: var(--gold); }
+    </style>
+</head>
+<body>
+
+<div id="customModal" class="modal-overlay">
+    <div class="modal-box">
+        <div id="modalTitle" style="font-weight:bold; font-size:18px; margin-bottom:10px;">Alert</div>
+        <div id="modalContent" style="font-size:14px; margin-bottom:15px; color:#6B7280;">Message</div>
+        <input type="text" id="modalInput" style="display:none;" placeholder="...">
+        <div id="modalActions" style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap;"></div>
+    </div>
+</div>
+
+<div class="container">
+    <div class="lang-toggle" onclick="toggleLanguage()" id="flagIcon">🇮🇩</div>
+    <div class="server-status"><span id="serverStatusText">Con...</span><div id="serverStatusDot" class="status-dot"></div></div>
+    <h1><i class="fa-solid fa-palette"></i> <span class="t-title">Mabar Pro</span></h1>
+
+    <!-- 0. PROFILING -->
+    <div id="screen-profile" class="screen">
+        <p class="t-prof-sub" style="font-size: 14px; color: #6B7280;">Siapkan profilmu / Setup profile!</p>
+        <div class="avatar-selection" id="avatarSelection">
+            <div class="avatar-opt selected" onclick="selectAvatar(this, 'Felix')"><img src="https://api.dicebear.com/7.x/pixel-art/svg?seed=Felix"></div>
+            <div class="avatar-opt" onclick="selectAvatar(this, 'Aneka')"><img src="https://api.dicebear.com/7.x/pixel-art/svg?seed=Aneka"></div>
+            <div class="avatar-opt" onclick="selectAvatar(this, 'Jude')"><img src="https://api.dicebear.com/7.x/pixel-art/svg?seed=Jude"></div>
+            <div class="avatar-opt" onclick="selectAvatar(this, 'Mimi')"><img src="https://api.dicebear.com/7.x/pixel-art/svg?seed=Mimi"></div>
+        </div>
+        <input type="text" id="usernameInput" class="t-ph-name" placeholder="Nama / Name (Max 10)" maxlength="10">
+        <button onclick="saveProfile()" class="t-btn-next"><i class="fa-solid fa-arrow-right"></i> Lanjut</button>
+    </div>
+
+    <!-- 1. HOME -->
+    <div id="screen-home" class="screen">
+        <div style="margin-bottom: 20px; font-weight:bold; color:var(--primary);"><span class="t-hello">Halo</span>, <span id="displayMyName">Kamu</span>!</div>
+        <button class="btn-purple" onclick="promptMatchmaking()"><i class="fa-solid fa-earth-asia"></i> <span class="t-btn-match">Cari Lawan (Auto)</span></button>
+        <div style="height:1px; background:#E5E7EB; margin:15px 0;"></div>
+        <button onclick="showScreen('screen-create')"><i class="fa-solid fa-plus"></i> <span class="t-btn-host">Host Room</span></button>
+        <button class="btn-green" onclick="loadRooms(); showScreen('screen-join')"><i class="fa-solid fa-list"></i> <span class="t-btn-join">Join Room</span></button>
+    </div>
+
+    <!-- 2. CREATE ROOM -->
+    <div id="screen-create" class="screen">
+        <h3 class="t-title-create" style="margin-top:0">Buat Room</h3>
+        <select id="hostGameMode" onchange="updateMaxPlayersUI()">
+            <option value="guess" class="t-opt-g">Mode: Tebak Gambar (1v1)</option>
+            <option value="battle" class="t-opt-b">Mode: Draw Battle (Multi)</option>
+        </select>
+        <select id="hostMaxPlayers" style="display:none;">
+            <option value="2">2 Pemain (AI Rating)</option>
+            <option value="3">3 Pemain (Voting)</option>
+            <option value="4">4 Pemain (Voting)</option>
+            <option value="5">5 Pemain (Voting)</option>
+        </select>
+        <input type="text" id="hostRoomName" placeholder="Nama Room" maxlength="15">
+        <input type="password" id="hostRoomPass" placeholder="Password (Opsional)">
+        <button class="btn-green t-btn-create" onclick="createRoom()">Buat</button>
+        <button class="btn-gray t-btn-cancel" onclick="showScreen('screen-home')">Batal</button>
+    </div>
+
+    <!-- 3. JOIN ROOM -->
+    <div id="screen-join" class="screen">
+        <h3 class="t-title-join" style="margin-top:0">Daftar Room</h3>
+        <div class="room-list" id="roomListDiv"></div>
+        <button class="btn-gray t-btn-cancel" onclick="showScreen('screen-home')">Batal</button>
+    </div>
+
+    <!-- 4. LOBBY -->
+    <div id="screen-lobby" class="screen">
+        <h3 id="lobbyRoomName" style="margin-top:0; color:var(--primary);">Room</h3>
+        <div class="player-list" id="lobbyPlayers"></div>
+        <div id="lobbyStatus" style="font-size:12px; margin-bottom:15px; color:#6B7280;"><i class="fa-solid fa-spinner fa-spin"></i> Menunggu Pemain...</div>
+        <button id="btnStartGame" class="btn-green t-btn-start" style="display:none;" onclick="startGame()">Mulai Game!</button>
+        <button class="btn-danger t-btn-leave" onclick="leaveRoom()">Keluar</button>
+    </div>
+
+    <!-- 5. IN-GAME -->
+    <div id="screen-game" class="screen">
+        
+        <!-- Scoreboard Guess Mode (1v1) -->
+        <div id="sb-guess" class="score-board" style="display:none;">
+            <div class="player-info"><img id="g-p1-img" src=""><span id="g-p1-name">P1</span><span style="color:#1F2937" id="g-p1-score">0 Pts</span></div>
+            <div style="display:flex; flex-direction:column; align-items:center;">
+                <div style="font-size: 10px; color: #6B7280; font-weight:bold;" class="t-time">WAKTU</div>
+                <div class="timer-info" id="g-timer">60</div>
+                <div id="g-round" style="font-weight:bold; font-size:11px;">Ronde 1/5</div>
+            </div>
+            <div class="player-info"><img id="g-p2-img" src=""><span id="g-p2-name">P2</span><span style="color:#1F2937" id="g-p2-score">0 Pts</span></div>
+        </div>
+
+        <!-- Header Battle Mode -->
+        <div id="sb-battle" style="display:none; justify-content:space-between; align-items:center; background:#FFFBEB; padding:10px; border-radius:10px; margin-bottom:10px; border:1px solid #FDE68A;">
+            <div style="color:var(--gold); font-weight:bold; font-size:14px;"><i class="fa-solid fa-fire"></i> DRAW BATTLE</div>
+            <div style="color:var(--danger); font-size:20px; font-weight:800;" id="b-timer">100</div>
+        </div>
+        
+        <div id="slotMachine" style="display:none;">---</div>
+        
+        <div style="text-align: center;">
+            <span id="role-badge" class="role-badge" style="display:none;">Peran</span>
+            <div id="word-display" style="font-size: 16px; font-weight: 800; color: var(--secondary); margin-bottom: 10px;">Instruksi</div>
+        </div>
+
+        <!-- CANVAS AREA -->
+        <div class="canvas-container" id="canvasArea">
+            <canvas id="gameCanvas" width="400" height="500"></canvas>
+            
+            <div id="drawTools" style="display:none;">
+                <div class="toolbar">
+                    <button class="tool-btn active" id="btnBrush" onclick="setTool('brush')"><i class="fa-solid fa-paint-brush"></i> <span class="t-brush">Kuas</span></button>
+                    <button class="tool-btn" id="btnBucket" onclick="setTool('bucket')"><i class="fa-solid fa-fill-drip"></i> <span class="t-bucket">Cat</span></button>
+                    <button class="tool-btn" onclick="clearCanvasEvent()"><i class="fa-solid fa-trash"></i> <span class="t-clear">Hapus</span></button>
+                </div>
+                <div class="color-palette"></div>
+            </div>
+        </div>
+
+        <!-- CHAT AREA (Guess Mode) -->
+        <div id="guessArea" style="display:none;">
+            <div class="chat-box" id="chatBox"></div>
+            <div style="display:flex; gap:10px;">
+                <input type="text" id="guessInput" placeholder="..." onkeypress="if(event.key==='Enter') submitGuess()">
+                <button style="width:auto; margin:0; padding:0 20px;" onclick="submitGuess()"><i class="fa-solid fa-paper-plane"></i></button>
+            </div>
+        </div>
+
+        <!-- VOTING AREA (Battle Mode) -->
+        <div id="votingArea" style="display:none; max-height:400px; overflow-y:auto; padding-bottom:10px;"></div>
+
+        <button class="btn-danger t-btn-leave" style="margin-top:10px;" onclick="leaveRoom()">Keluar Game</button>
+    </div>
+</div>
+
+<script>
+    // --- 1. SETUP FIREBASE ---
+    const firebaseConfig = {
+        apiKey: "AIzaSyBBNc_H9SA7WrIagS8f-5uHggeU7ODia7Q",
+        authDomain: "qrtes12.firebaseapp.com",
+        databaseURL: "https://qrtes12-default-rtdb.asia-southeast1.firebasedatabase.app/",
+        projectId: "qrtes12",
+        storageBucket: "qrtes12.firebasestorage.app",
+        messagingSenderId: "993597353524",
+        appId: "1:993597353524:web:151391426bf44c22aee461"
+    };
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    db.ref(".info/connected").on("value", (snap) => {
+        const t = document.getElementById('serverStatusText'), d = document.getElementById('serverStatusDot');
+        if (snap.val()) { t.innerText = "Online"; d.classList.add('online'); } else { t.innerText = "Offline"; d.classList.remove('online'); }
+    });
+
+    // --- 2. MULTILANGUAGE & DATABASE KATA ---
+    let lang = 'id';
+    const dict = {
+        id: { title: "Mabar Pro", hello: "Halo", btnMatch: "Cari Lawan (Auto)", btnHost: "Host Room", btnJoin: "Join Room", phName: "Nama (Max 10)", btnNext: "Lanjut", titleCreate: "Buat Room", titleJoin: "Daftar Room", btnCreate: "Buat", btnCancel: "Batal", btnStart: "Mulai Game", btnLeave: "Keluar", brush: "Kuas", bucket: "Cat", clear: "Hapus", modeG: "Tebak Gambar", modeB: "Draw Battle", time: "WAKTU", aiEval: "🤖 AI Sedang Menilai...", voteTxt: "Beri Bintang!", wait: "Menunggu..." },
+        en: { title: "Mabar Pro", hello: "Hello", btnMatch: "Find Match (Auto)", btnHost: "Host Room", btnJoin: "Join Room", phName: "Name (Max 10)", btnNext: "Next", titleCreate: "Create Room", titleJoin: "Room List", btnCreate: "Create", btnCancel: "Cancel", btnStart: "Start Game", btnLeave: "Leave", brush: "Brush", bucket: "Fill", clear: "Clear", modeG: "Guess Mode", modeB: "Draw Battle", time: "TIME", aiEval: "🤖 AI Evaluating...", voteTxt: "Rate Others!", wait: "Waiting..." }
+    };
+
+    const wordsDB = {
+        id: ["Apel", "Pisang", "Jeruk", "Semangka", "Nanas", "Mangga", "Sepeda", "Laptop", "Gitar", "Kamera", "Jam", "Kacamata", "Buku", "Payung", "Sepatu", "Kucing", "Anjing", "Gajah", "Singa", "Kuda", "Monyet", "Kelinci", "Burung", "Hiu", "Paus", "Ular", "Doraemon", "SpongeBob", "Pikachu", "Naruto", "Alien", "Robot", "Naga", "Kastil", "Roket", "Pesawat", "Helikopter", "Mobil", "Motor", "Perahu", "Rumah", "Pohon", "Bunga", "Matahari", "Bulan", "Bintang", "Awan", "Gunung", "Sungai", "Api"],
+        en: ["Apple", "Banana", "Orange", "Watermelon", "Pineapple", "Mango", "Bicycle", "Laptop", "Guitar", "Camera", "Watch", "Glasses", "Book", "Umbrella", "Shoes", "Cat", "Dog", "Elephant", "Lion", "Horse", "Monkey", "Rabbit", "Bird", "Shark", "Whale", "Snake", "Doraemon", "SpongeBob", "Pikachu", "Naruto", "Alien", "Robot", "Dragon", "Castle", "Rocket", "Airplane", "Helicopter", "Car", "Motorcycle", "Boat", "House", "Tree", "Flower", "Sun", "Moon", "Star", "Cloud", "Mountain", "River", "Fire"]
+    };
+
+    function toggleLanguage() {
+        lang = lang === 'id' ? 'en' : 'id';
+        document.getElementById('flagIcon').innerText = lang === 'id' ? '🇮🇩' : '🇬🇧';
+        
+        document.querySelector('.t-title').innerText = dict[lang].title;
+        document.querySelector('.t-hello').innerText = dict[lang].hello;
+        document.querySelector('.t-btn-match').innerText = dict[lang].btnMatch;
+        document.querySelector('.t-btn-host').innerText = dict[lang].btnHost;
+        document.querySelector('.t-btn-join').innerText = dict[lang].btnJoin;
+        document.querySelector('.t-ph-name').placeholder = dict[lang].phName;
+        document.querySelector('.t-title-create').innerText = dict[lang].titleCreate;
+        document.querySelector('.t-title-join').innerText = dict[lang].titleJoin;
+        document.querySelector('.t-opt-g').innerText = `Mode: ${dict[lang].modeG} (1v1)`;
+        document.querySelector('.t-opt-b').innerText = `Mode: ${dict[lang].modeB} (Multi)`;
+        document.querySelector('.t-brush').innerText = dict[lang].brush;
+        document.querySelector('.t-bucket').innerText = dict[lang].bucket;
+        document.querySelector('.t-clear').innerText = dict[lang].clear;
+        document.querySelector('.t-time').innerText = dict[lang].time;
+        document.querySelectorAll('.t-btn-cancel').forEach(e=>e.innerText = dict[lang].btnCancel);
+        document.querySelectorAll('.t-btn-leave').forEach(e=>e.innerText = dict[lang].btnLeave);
+    }
+
+    // --- 3. VARIABLES ---
+    let myUser = { id: '', name: '', avatar: 'https://api.dicebear.com/7.x/pixel-art/svg?seed=Felix' };
+    let currentRoomId = '', isHost = false, roomListener = null;
+    let players = {}, gameMode = 'guess', currentTurn = '', targetWord = '';
+    let timerInterval = null, timeLeft = 0, gameActive = false, myRole = '', hasEnteredGame = false;
+    const maxRounds = 5;
+
+    // Canvas
+    const canvas = document.getElementById('gameCanvas'); const ctx = canvas.getContext('2d');
+    let isDrawing = false, currentTool = 'brush', currentColor = '#000000';
+    const colors = ['#000000', '#EF4444', '#F59E0B', '#10B981', '#3B82F6', '#8B5CF6', '#EC4899', '#6B7280', '#FFFFFF', '#8B4513', '#FFD700', '#00FFFF'];
+
+    window.onload = () => {
+        setupColors();
+        const saved = localStorage.getItem('mabarProV2');
+        if(saved) {
+            myUser = JSON.parse(saved);
+            document.getElementById('displayMyName').innerText = myUser.name;
+            document.getElementById('usernameInput').value = myUser.name;
+            showScreen('screen-home');
+        } else showScreen('screen-profile');
+    };
+
+    function showModal(title, content, type = 'alert', onSub = '') {
+        document.getElementById('modalTitle').innerText = title; document.getElementById('modalContent').innerHTML = content;
+        const inp = document.getElementById('modalInput'), act = document.getElementById('modalActions');
+        act.innerHTML = ''; inp.style.display = 'none'; inp.value = '';
+        if (type === 'alert') act.innerHTML = `<button class="btn-green" onclick="closeModal()">OK</button>`;
+        else if (type === 'prompt') { inp.style.display = 'block'; act.innerHTML = `<button class="btn-gray" onclick="closeModal()">${dict[lang].btnCancel}</button><button class="btn-green" onclick="${onSub}()">Submit</button>`; }
+        else if (type === 'custom') act.innerHTML = onSub;
+        document.getElementById('customModal').style.display = 'flex';
+    }
+    function closeModal() { document.getElementById('customModal').style.display = 'none'; }
+    function showScreen(id) { document.querySelectorAll('.screen').forEach(s => s.classList.remove('active')); document.getElementById(id).classList.add('active'); }
+    function selectAvatar(el, seed) { document.querySelectorAll('.avatar-opt').forEach(e=>e.classList.remove('selected')); el.classList.add('selected'); myUser.avatar = `https://api.dicebear.com/7.x/pixel-art/svg?seed=${seed}`; }
+    function saveProfile() {
+        const name = document.getElementById('usernameInput').value.trim();
+        if(!name) return;
+        myUser.id = 'p_' + Date.now() + Math.floor(Math.random()*100); 
+        myUser.name = name; localStorage.setItem('mabarProV2', JSON.stringify(myUser));
+        document.getElementById('displayMyName').innerText = name; showScreen('screen-home');
+    }
+
+    // --- 4. MATCHMAKING & LOBBY ---
+    function promptMatchmaking() {
+        const btns = `
+            <button class="btn-purple" style="width:100%" onclick="executeMatch('guess')"><i class="fa-solid fa-user-ninja"></i> ${dict[lang].modeG} (1v1)</button>
+            <button class="btn-gold" style="width:100%" onclick="executeMatch('battle')"><i class="fa-solid fa-fire"></i> ${dict[lang].modeB} (2-5P)</button>
+            <button class="btn-gray" style="width:100%" onclick="closeModal()">${dict[lang].btnCancel}</button>
+        `;
+        showModal("Pilih Mode / Select Mode", "Mode apa yang ingin kamu mainkan?", "custom", btns);
+    }
+
+    function executeMatch(mode) {
+        closeModal();
+        showModal("Auto Match", `<i class='fa-solid fa-earth-asia fa-spin' style='font-size:24px; color:var(--purple); margin-bottom:10px;'></i><br>${dict[lang].wait}`, "custom", `<button class="btn-danger" onclick="cancelMatch()">Batal</button>`);
+        
+        let maxP = mode === 'guess' ? 2 : 5;
+        
+        db.ref('rooms').orderByChild('status').equalTo('waiting_match').once('value', snap => {
+            let joined = false;
+            if(snap.exists()){
+                snap.forEach(c => {
+                    let d = c.val(); let pCount = Object.keys(d.players||{}).length;
+                    if(d.mode === mode && pCount < d.maxPlayers && !joined) {
+                        joinRoomData(c.key); joined = true;
+                    }
+                });
+            }
+            if(!joined) { // Create auto room
+                currentRoomId = db.ref('rooms').push().key; isHost = true;
+                let pData = {}; pData[myUser.id] = myUser;
+                db.ref('rooms/'+currentRoomId).set({ name: "Auto Match", password: "", status: 'waiting_match', mode: mode, maxPlayers: maxP, players: pData, phase: 'lobby' });
+                db.ref('rooms/'+currentRoomId).onDisconnect().remove();
+                listenToRoom();
+            }
+        });
+    }
+    function cancelMatch() { if(isHost && currentRoomId) db.ref('rooms/'+currentRoomId).remove(); leaveRoom(); }
+
+    function updateMaxPlayersUI() { document.getElementById('hostMaxPlayers').style.display = document.getElementById('hostGameMode').value === 'battle' ? 'block' : 'none'; }
+    function createRoom() {
+        const name = document.getElementById('hostRoomName').value.trim() || 'Room';
+        const pass = document.getElementById('hostRoomPass').value.trim();
+        const mode = document.getElementById('hostGameMode').value;
+        const maxP = mode === 'guess' ? 2 : parseInt(document.getElementById('hostMaxPlayers').value);
+
+        currentRoomId = db.ref('rooms').push().key; isHost = true;
+        let pData = {}; pData[myUser.id] = myUser;
+        let sData = {}; sData[myUser.id] = 0;
+
+        db.ref('rooms/'+currentRoomId).set({
+            name, password: pass, status: 'waiting_private', mode, maxPlayers: maxP,
+            players: pData, scores: sData, round: 1, turnCount: 0, currentTurn: myUser.id, word: '', phase: 'lobby', timestamp: firebase.database.ServerValue.TIMESTAMP
+        });
+        db.ref('rooms/'+currentRoomId).onDisconnect().remove();
+        showScreen('screen-lobby'); listenToRoom();
+    }
+
+    function loadRooms() {
+        document.getElementById('roomListDiv').innerHTML = '<p>...</p>';
+        db.ref('rooms').orderByChild('status').equalTo('waiting_private').once('value', snap => {
+            let h = '';
+            if(snap.exists()) {
+                snap.forEach(c => {
+                    let d = c.val(); let pCount = d.players ? Object.keys(d.players).length : 0;
+                    if(pCount < d.maxPlayers) {
+                        h += `<div class="room-item">
+                            <div><b>${d.name}</b> <br><span style="font-size:10px;">${d.mode.toUpperCase()} | ${pCount}/${d.maxPlayers} Org</span></div>
+                            <button class="btn-green" onclick="promptJoin('${c.key}', '${d.password}')">Join</button>
+                        </div>`;
+                    }
+                });
+            }
+            document.getElementById('roomListDiv').innerHTML = h || '<p>Kosong / Empty</p>';
+        });
+    }
+    let targetJoin = {};
+    function promptJoin(id, pass) { targetJoin = {id, pass}; if(pass) showModal('Password', '', 'prompt', 'processJoin'); else joinRoomData(id); }
+    function processJoin() { let inp = document.getElementById('modalInput').value; if(inp===targetJoin.pass) { closeModal(); joinRoomData(targetJoin.id); } else alert("Salah!"); }
+    
+    function joinRoomData(id) {
+        currentRoomId = id; isHost = false;
+        db.ref(`rooms/${id}/players/${myUser.id}`).set(myUser);
+        db.ref(`rooms/${id}/scores/${myUser.id}`).set(0);
+        db.ref(`rooms/${id}/players/${myUser.id}`).onDisconnect().remove();
+        showScreen('screen-lobby'); listenToRoom();
+    }
+
+    function leaveRoom() {
+        if(currentRoomId) {
+            if(isHost) db.ref('rooms/'+currentRoomId).remove();
+            else db.ref(`rooms/${currentRoomId}/players/${myUser.id}`).remove();
+        }
+        window.location.reload();
+    }
+
+    // --- 5. ROOM SYNC & ROUTING ---
+    function listenToRoom() {
+        if(roomListener) db.ref('rooms/'+currentRoomId).off('value', roomListener);
+        roomListener = db.ref('rooms/'+currentRoomId).on('value', snap => {
+            const data = snap.val();
+            if(!data) { alert("Room Closed."); window.location.reload(); return; }
+
+            players = data.players || {}; gameMode = data.mode;
+            let pKeys = Object.keys(players);
+            
+            // LOBBY UI
+            document.getElementById('lobbyRoomName').innerText = `${data.name} (${data.mode.toUpperCase()})`;
+            let pUI = ''; pKeys.forEach(k => { pUI += `<div class="player-badge"><img src="${players[k].avatar}"> ${players[k].name}</div>`; });
+            document.getElementById('lobbyPlayers').innerHTML = pUI;
+
+            if(isHost && data.phase === 'lobby') {
+                if(gameMode === 'guess' && pKeys.length === 2) document.getElementById('btnStartGame').style.display = 'block';
+                else if (gameMode === 'battle' && pKeys.length >= 2) document.getElementById('btnStartGame').style.display = 'block';
+                else document.getElementById('btnStartGame').style.display = 'none';
+            }
+
+            // TRANSITIONS
+            if(data.phase === 'playing' && !hasEnteredGame) {
+                closeModal(); hasEnteredGame = true;
+                db.ref(`rooms/${currentRoomId}`).off('value', roomListener);
+                initGameEngine(data);
+            }
+        });
+    }
+
+    function startGame() {
+        const words = wordsDB[lang]; const rw = words[Math.floor(Math.random() * words.length)];
+        let up = { status: 'playing', phase: 'playing', word: rw };
+        if(gameMode === 'guess') { up.currentTurn = Object.keys(players)[0]; up.round = 1; up.turnCount = 0; }
+        db.ref('rooms/'+currentRoomId).update(up);
+    }
+
+    // --- 6. UNIFIED GAME ENGINE ---
+    function initGameEngine(initialData) {
+        showScreen('screen-game');
+        document.getElementById('chatBox').innerHTML = '';
+        db.ref(`rooms/${currentRoomId}`).onDisconnect().update({ phase: 'abandoned' });
+
+        const roomRef = db.ref(`rooms/${currentRoomId}`);
+        roomRef.on('value', snap => {
+            const data = snap.val();
+            if(!data) return;
+            if(data.phase === 'abandoned') return forceLeave("Pemain keluar / Player Left.");
+            if(data.phase === 'gameover') return processGameOver(data);
+            
+            if(gameMode === 'guess' && data.phase === 'playing') handleGuessUI(data);
+            if(gameMode === 'battle') {
+                if(data.phase === 'playing') handleBattleUI(data);
+                if(data.phase === 'voting') handleVotingUI(data);
+            }
+        });
+
+        // Event Listeners for Syncing
+        roomRef.child('drawing').on('child_added', snap => {
+            if (myRole === 'guesser' && gameMode === 'guess') {
+                let p = snap.val(); ctx.strokeStyle = p.c;
+                if (p.t === 's') { ctx.beginPath(); ctx.moveTo(p.x, p.y); spawnSparkles(p.x,p.y); } 
+                else if (p.t === 'd') { ctx.lineTo(p.x, p.y); ctx.stroke(); spawnSparkles(p.x,p.y); }
+                else if (p.t === 'f') { floodFill(p.x, p.y, hexToRgb(p.c)); }
+            }
+        });
+        roomRef.child('clear').on('value', snap => { if(snap.val()) { ctx.clearRect(0,0,canvas.width,canvas.height); } });
+        roomRef.child('chats').on('child_added', snap => {
+            let chat = snap.val(); let div = document.createElement('div'); div.className = 'chat-msg';
+            if (chat.sys) div.innerHTML = `<div class="sys-msg">${chat.txt}</div>`;
+            else if (chat.cor) { div.innerHTML = `<img src="${chat.ava}"> <b>${chat.name}:</b> <span style="color:var(--secondary); font-weight:bold;">BENAR! (+${chat.pts} Pts) 🎉</span>`; if(myRole==='drawer') gameActive=false; }
+            else div.innerHTML = `<img src="${chat.ava}"> <b>${chat.name}:</b> ${chat.txt}`;
+            const cb = document.getElementById('chatBox'); cb.appendChild(div); cb.scrollTop = cb.scrollHeight;
+        });
+    }
+
+    // --- GUESS MODE (1v1) LOGIC ---
+    function handleGuessUI(data) {
+        document.getElementById('sb-guess').style.display = 'flex'; document.getElementById('sb-battle').style.display = 'none';
+        let pKeys = Object.keys(data.players);
+        let p1 = pKeys[0], p2 = pKeys[1];
+        if(p1 && data.players[p1]) { document.getElementById('g-p1-img').src = data.players[p1].avatar; document.getElementById('g-p1-name').innerText = data.players[p1].name; document.getElementById('g-p1-score').innerText = `${data.scores[p1]||0} Pts`; }
+        if(p2 && data.players[p2]) { document.getElementById('g-p2-img').src = data.players[p2].avatar; document.getElementById('g-p2-name').innerText = data.players[p2].name; document.getElementById('g-p2-score').innerText = `${data.scores[p2]||0} Pts`; }
+        document.getElementById('g-round').innerText = `Ronde ${data.round}/${maxRounds}`;
+
+        let checkRole = (data.currentTurn === myUser.id) ? 'drawer' : 'guesser';
+        if (targetWord !== data.word || myRole !== checkRole) {
+            targetWord = data.word; myRole = checkRole; gameActive = true;
+            ctx.clearRect(0,0,canvas.width,canvas.height);
+            
+            const badge = document.getElementById('role-badge'); badge.style.display = 'inline-block';
+            if(myRole === 'drawer') {
+                badge.className = 'role-badge role-drawer'; badge.innerHTML = '<i class="fa-solid fa-pencil"></i> Menggambar';
+                document.getElementById('drawTools').style.display = 'block'; document.getElementById('guessArea').style.display = 'none';
+                document.getElementById('word-display').innerText = targetWord.toUpperCase();
+            } else {
+                badge.className = 'role-badge role-guesser'; badge.innerHTML = '<i class="fa-solid fa-lightbulb"></i> Menebak';
+                document.getElementById('drawTools').style.display = 'none'; document.getElementById('guessArea').style.display = 'block';
+                document.getElementById('word-display').innerText = "Menebak... / Guessing...";
+            }
+            startLocalTimer(60, 'g-timer', () => {
+                if(isHost) {
+                    db.ref(`rooms/${currentRoomId}/chats`).push({ sys: true, txt: `Waktu Habis! Jawabannya: ${targetWord}` });
+                    processNextTurn(0);
+                }
+            });
+        }
+    }
+
+    function submitGuess() {
+        if(!gameActive || myRole!=='guesser') return;
+        const g = document.getElementById('guessInput').value.trim().toLowerCase();
+        if(!g) return; document.getElementById('guessInput').value = '';
+        
+        let isCor = (g === targetWord.toLowerCase());
+        let pts = isCor ? Math.max(10, timeLeft * 2) : 0;
+        
+        db.ref(`rooms/${currentRoomId}/chats`).push({ name: myUser.name, ava: myUser.avatar, txt: g, cor: isCor, pts: pts });
+        
+        if(isCor) {
+            gameActive = false; clearInterval(timerInterval);
+            processNextTurn(pts);
+        }
+    }
+
+    function processNextTurn(pts) {
+        db.ref(`rooms/${currentRoomId}`).once('value', snap => {
+            const d = snap.val(); if(!d) return;
+            let nScore = (d.scores[myUser.id] || 0) + pts;
+            let nTurnC = (d.turnCount || 0) + 1;
+            let nTurn = (d.currentTurn === Object.keys(d.players)[0]) ? Object.keys(d.players)[1] : Object.keys(d.players)[0];
+            let nRound = d.round;
+            if(nTurnC >= 2) { nTurnC = 0; nRound++; }
+            
+            if(nRound > maxRounds) { db.ref(`rooms/${currentRoomId}`).update({ [`scores/${myUser.id}`]: nScore, phase: 'gameover' }); }
+            else {
+                setTimeout(() => {
+                    db.ref(`rooms/${currentRoomId}/drawing`).remove();
+                    db.ref(`rooms/${currentRoomId}`).update({ [`scores/${myUser.id}`]: nScore, currentTurn: nTurn, round: nRound, turnCount: nTurnC, word: getRandomWord() });
+                }, 2000);
+            }
+        });
+    }
+
+    // --- BATTLE MODE (2-5P) LOGIC ---
+    let slotIV = null;
+    function handleBattleUI(data) {
+        document.getElementById('sb-guess').style.display = 'none'; document.getElementById('sb-battle').style.display = 'flex';
+        myRole = 'drawer'; gameActive = true;
+        
+        if (targetWord !== data.word) {
+            targetWord = data.word; ctx.clearRect(0,0,canvas.width,canvas.height);
+            document.getElementById('drawTools').style.display = 'block'; document.getElementById('guessArea').style.display = 'none';
+            document.getElementById('slotMachine').style.display = 'flex'; document.getElementById('word-display').style.display = 'none';
+            canvas.style.pointerEvents = 'none';
+            
+            // Slot Effect
+            const wList = wordsDB[lang];
+            slotIV = setInterval(() => { document.getElementById('slotMachine').innerText = wList[Math.floor(Math.random()*wList.length)]; }, 100);
+            
+            setTimeout(() => {
+                clearInterval(slotIV); document.getElementById('slotMachine').style.display = 'none';
+                document.getElementById('word-display').style.display = 'block'; document.getElementById('word-display').innerText = "GAMBAR: " + targetWord.toUpperCase();
+                canvas.style.pointerEvents = 'auto';
+                
+                startLocalTimer(100, 'b-timer', () => {
+                    canvas.style.pointerEvents = 'none';
+                    let img = canvas.toDataURL("image/png");
+                    db.ref(`rooms/${currentRoomId}/gallery/${myUser.id}`).set(img);
+                    if(isHost) setTimeout(()=> db.ref(`rooms/${currentRoomId}`).update({phase:'voting'}), 2000);
+                });
+            }, 3000);
+        }
+    }
+
+    function handleVotingUI(data) {
+        document.getElementById('canvasArea').style.display = 'none'; document.getElementById('sb-battle').style.display = 'none';
+        document.getElementById('word-display').innerText = dict[lang].voteTxt;
+        const vArea = document.getElementById('votingArea'); vArea.style.display = 'block';
+        
+        let pKeys = Object.keys(data.players || {});
+        if(pKeys.length === 2) {
+            vArea.innerHTML = `<h3>${dict[lang].aiEval}</h3><div class="status-dot" style="margin:20px auto; width:30px; height:30px;"></div>`;
+            if(isHost) {
+                setTimeout(() => {
+                    let s1 = Math.floor(Math.random()*50)+50; let s2 = Math.floor(Math.random()*50)+50;
+                    db.ref(`rooms/${currentRoomId}`).update({ [`scores/${pKeys[0]}`]: s1, [`scores/${pKeys[1]}`]: s2, phase: 'gameover' });
+                }, 4000);
+            }
+        } else {
+            let h = '';
+            pKeys.forEach(k => {
+                if(data.gallery && data.gallery[k]) {
+                    h += `<div class="gallery-item"><div style="font-weight:bold; margin-bottom:5px;">🎨 ${data.players[k].name}</div><img src="${data.gallery[k]}">`;
+                    if(k !== myUser.id) {
+                        h += `<div class="star-rating" data-target="${k}">
+                            <i class="fa-solid fa-star" onclick="rateImg('${k}', 1)"></i><i class="fa-solid fa-star" onclick="rateImg('${k}', 2)"></i>
+                            <i class="fa-solid fa-star" onclick="rateImg('${k}', 3)"></i><i class="fa-solid fa-star" onclick="rateImg('${k}', 4)"></i>
+                            <i class="fa-solid fa-star" onclick="rateImg('${k}', 5)"></i></div>`;
+                    } else h += `<div style="color:var(--primary); font-size:12px; font-weight:bold; text-align:center;">(Milikmu)</div>`;
+                    h += `</div>`;
+                }
+            });
+            if(isHost) h += `<button class="btn-danger" onclick="endVoting()">Selesai Voting / Finish</button>`;
+            vArea.innerHTML = h;
+        }
+    }
+
+    function rateImg(tgt, stars) {
+        db.ref(`rooms/${currentRoomId}/votes/${tgt}/${myUser.id}`).set(stars);
+        let parent = document.querySelector(`.star-rating[data-target="${tgt}"]`);
+        let starEls = parent.querySelectorAll('i');
+        starEls.forEach((s, idx) => { if(idx < stars) s.classList.add('checked'); else s.classList.remove('checked'); });
+    }
+
+    function endVoting() {
+        db.ref(`rooms/${currentRoomId}`).once('value', snap => {
+            let d = snap.val(); let fin = {};
+            if(d.votes) { Object.keys(d.votes).forEach(t => { let s=0; Object.values(d.votes[t]).forEach(v=>s+=v); fin[t] = s*10; }); }
+            db.ref(`rooms/${currentRoomId}`).update({ scores: fin, phase: 'gameover' });
+        });
+    }
+
+    // --- TIMER & UTIL ---
+    function startLocalTimer(dur, elId, onEnd) {
+        clearInterval(timerInterval); timeLeft = dur;
+        const el = document.getElementById(elId); if(el) el.innerText = timeLeft;
+        timerInterval = setInterval(() => {
+            if(!gameActive) { clearInterval(timerInterval); return; }
+            timeLeft--; if(el) el.innerText = timeLeft;
+            if(timeLeft <= 0) { clearInterval(timerInterval); gameActive = false; onEnd(); }
+        }, 1000);
+    }
+    
+    function getRandomWord() { const w = wordsDB[lang]; return w[Math.floor(Math.random() * w.length)]; }
+    function forceLeave(msg) { showModal('Alert', msg, 'alert'); setTimeout(() => window.location.reload(), 2000); }
+
+    function processGameOver(data) {
+        document.getElementById('votingArea').style.display = 'block'; document.getElementById('canvasArea').style.display = 'none'; document.getElementById('sb-guess').style.display = 'none'; document.getElementById('sb-battle').style.display = 'none'; document.getElementById('word-display').style.display = 'none';
+        let h = `<h2><i class="fa-solid fa-trophy" style="color:gold;"></i> Score</h2>`;
+        let pKeys = Object.keys(data.players || {});
+        let arr = pKeys.map(k => ({ name: data.players[k].name, ava: data.players[k].avatar, score: (data.scores && data.scores[k]) ? data.scores[k] : 0 }));
+        arr.sort((a,b) => b.score - a.score);
+        arr.forEach((p, i) => { h += `<div class="gallery-item" style="display:flex; justify-content:space-between; font-weight:bold; align-items:center;"><span>#${i+1} <img src="${p.ava}" width="20" style="border-radius:50%; vertical-align:middle;"> ${p.name}</span><span style="color:var(--primary);">${p.score} Pts</span></div>`; });
+        h += `<button class="btn-gray" onclick="leaveRoom()">Kembali / Home</button>`;
+        document.getElementById('votingArea').innerHTML = h;
+        
+        if(isHost && arr[0].score > 0) {
+            const lbRef = db.ref('leaderboard').child(arr[0].name); 
+            lbRef.once('value', snap => { let c = snap.exists() ? snap.val().score : 0; lbRef.set({ score: c + arr[0].score, avatar: arr[0].ava }); });
+        }
+    }
+
+    // --- CANVAS TOOLS ---
+    function setupColors() {
+        const pal = document.querySelector('.color-palette');
+        colors.forEach(c => {
+            let b = document.createElement('div'); b.className = 'color-btn'; b.style.backgroundColor = c;
+            if(c==='#000000') b.classList.add('active');
+            b.onclick = () => { document.querySelectorAll('.color-btn').forEach(e=>e.classList.remove('active')); b.classList.add('active'); currentColor = c; ctx.strokeStyle = c; };
+            pal.appendChild(b);
+        });
+    }
+    function setTool(t) { currentTool = t; document.querySelectorAll('.tool-btn').forEach(e=>e.classList.remove('active')); if(t==='brush') document.getElementById('btnBrush').classList.add('active'); if(t==='bucket') document.getElementById('btnBucket').classList.add('active'); }
+    function clearCanvasEvent() { ctx.clearRect(0,0,canvas.width,canvas.height); if(gameMode==='guess') db.ref(`rooms/${currentRoomId}/clear`).set(Date.now()); }
+
+    function getPos(e) { const r = canvas.getBoundingClientRect(); const sX = canvas.width/r.width; const sY = canvas.height/r.height; let cX = e.touches ? e.touches[0].clientX : e.clientX; let cY = e.touches ? e.touches[0].clientY : e.clientY; return { x: Math.floor((cX-r.left)*sX), y: Math.floor((cY-r.top)*sY) }; }
+    canvas.addEventListener('mousedown', startAction); canvas.addEventListener('mousemove', moveAction); window.addEventListener('mouseup', endAction);
+    canvas.addEventListener('touchstart', (e)=>{e.preventDefault(); startAction(e);}, {passive:false}); canvas.addEventListener('touchmove', (e)=>{e.preventDefault(); moveAction(e);}, {passive:false}); canvas.addEventListener('touchend', endAction);
+
+    function startAction(e) {
+        if(canvas.style.pointerEvents === 'none' || !gameActive || (gameMode==='guess' && myRole!=='drawer')) return;
+        let p = getPos(e);
+        if(currentTool === 'bucket') {
+            floodFill(p.x, p.y, hexToRgb(currentColor));
+            if(gameMode === 'guess') db.ref(`rooms/${currentRoomId}/drawing`).push({ t:'f', x:p.x, y:p.y, c:currentColor });
+        } else {
+            isDrawing = true; ctx.beginPath(); ctx.moveTo(p.x, p.y);
+            if(gameMode === 'guess') db.ref(`rooms/${currentRoomId}/drawing`).push({ t:'s', x:p.x, y:p.y, c:currentColor });
+        }
+    }
+    function moveAction(e) {
+        if(!isDrawing || currentTool !== 'brush') return;
+        let p = getPos(e); ctx.lineTo(p.x, p.y); ctx.stroke();
+        if(gameMode === 'guess') db.ref(`rooms/${currentRoomId}/drawing`).push({ t:'d', x:p.x, y:p.y, c:currentColor });
+    }
+    function endAction() { isDrawing = false; }
+
+    // Fast Flood Fill
+    function hexToRgb(h) { let r=0,g=0,b=0; if(h.length===7){ r=parseInt(h.substring(1,3),16); g=parseInt(h.substring(3,5),16); b=parseInt(h.substring(5,7),16); } return [r,g,b,255]; }
+    function floodFill(startX, startY, fColor) {
+        let w = canvas.width, h = canvas.height; let img = ctx.getImageData(0,0,w,h); let d = img.data; let sIdx = (startY * w + startX) * 4;
+        let sR = d[sIdx], sG = d[sIdx+1], sB = d[sIdx+2], sA = d[sIdx+3];
+        if(sR===fColor[0] && sG===fColor[1] && sB===fColor[2] && sA===fColor[3]) return;
+        let stack = [[startX, startY]];
+        while(stack.length) {
+            let [x, y] = stack.pop(); let idx = (y * w + x) * 4;
+            if(x>=0 && x<w && y>=0 && y<h && d[idx]===sR && d[idx+1]===sG && d[idx+2]===sB && d[idx+3]===sA) {
+                d[idx]=fColor[0]; d[idx+1]=fColor[1]; d[idx+2]=fColor[2]; d[idx+3]=fColor[3];
+                stack.push([x+1,y], [x-1,y], [x,y+1], [x,y-1]);
+            }
+        }
+        ctx.putImageData(img,0,0);
+    }
+
+    function spawnSparkles(x, y) { for(let i=0; i<2; i++){ particles.push({ x: x, y: y, vx: (Math.random() - 0.5) * 5, vy: (Math.random() - 0.5) * 5, life: 1.0, color: `hsl(${Math.random() * 360}, 100%, 60%)` }); } }
+    function animateFX() { fxCtx.clearRect(0, 0, fxCanvas.width, fxCanvas.height); for(let i = particles.length - 1; i >= 0; i--){ let p = particles[i]; p.x += p.vx; p.y += p.vy; p.life -= 0.05; if(p.life <= 0) { particles.splice(i, 1); } else { fxCtx.globalAlpha = p.life; fxCtx.fillStyle = p.color; fxCtx.beginPath(); fxCtx.arc(p.x, p.y, 2, 0, Math.PI * 2); fxCtx.fill(); } } fxCtx.globalAlpha = 1.0; requestAnimationFrame(animateFX); }
+</script>
+
+</body>
+</html>
