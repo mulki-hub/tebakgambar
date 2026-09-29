@@ -1,0 +1,1041 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Mabar Pro - Xenaz Ultimate Edition</title>
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style id="theme-style">
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&family=Press+Start+2P&display=swap');
+        
+        :root { 
+            --primary: #4F46E5; --secondary: #10B981; --danger: #EF4444; 
+            --bg: #F3F4F6; --card: #FFFFFF; --text: #1F2937; 
+            --gold: #F59E0B; --purple: #8B5CF6; --pink: #EC4899;
+            --font-main: 'Poppins', sans-serif;
+            --btn-radius: 12px; --border-style: none; --shadow: 0 10px 25px rgba(0,0,0,0.05);
+        }
+        
+        body { font-family: var(--font-main); background-color: var(--bg); color: var(--text); display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 10px; box-sizing: border-box; overflow-x: hidden; position: relative;}
+        
+        /* Background Animations */
+        .particles-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; overflow: hidden; }
+        .particle { position: absolute; bottom: -10vh; width: 15px; height: 15px; background: rgba(79, 70, 229, 0.1); border-radius: 50%; animation: floatUp linear infinite; }
+        @keyframes floatUp { to { transform: translateY(-110vh) rotate(360deg); } }
+        
+        .bubble { position: absolute; bottom: -10vh; background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.1)); border: 1px solid rgba(255,255,255,0.5); border-radius: 50%; animation: floatUp linear infinite; z-index: 2; box-shadow: 0 0 10px rgba(255,255,255,0.2);}
+        .meteor { position: absolute; top: -10vh; right: -10vw; width: 3px; height: 35px; background: linear-gradient(to bottom, rgba(255,255,255,1), rgba(255,255,255,0)); transform: rotate(-45deg); animation: meteorFall linear infinite; z-index: 2; border-radius: 5px; box-shadow: 0 0 10px #fff, 0 0 20px #8B5CF6;}
+        @keyframes meteorFall { to { transform: translate(-120vw, 120vh) rotate(-45deg); } }
+        .sakura { position: absolute; top: -10vh; animation: fall linear infinite; color: #FF9EBB; text-shadow: 0 0 5px rgba(255,158,187,0.5); z-index: 2;}
+        @keyframes fall { to { transform: translateY(110vh) rotate(360deg); } }
+
+        .container { background: var(--card); border-radius: 20px; border: var(--border-style); box-shadow: var(--shadow); padding: 20px; width: 100%; max-width: 450px; text-align: center; position: relative; z-index: 10;}
+        .top-ui { position: absolute; top: 15px; width: 100%; display: flex; justify-content: space-between; padding: 0 20px; box-sizing: border-box; left:0; z-index: 50; }
+        .server-status { font-size: 10px; font-weight: 600; display: flex; align-items: center; gap: 5px; color: var(--text); opacity: 0.7;}
+        .status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--danger); animation: pulse 1.5s infinite; } .status-dot.online { background: var(--secondary); animation: none; }
+        @keyframes pulse { 0% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.5); opacity: 0.5; } 100% { transform: scale(1); opacity: 1; } }
+        
+        h1 { color: var(--primary); font-weight: 800; margin: 25px 0 20px 0; font-size: 24px; }
+        
+        .screen { display: none; } .screen.active { display: block; animation: fadeIn 0.3s; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        input, select { width: 100%; padding: 12px; margin-bottom: 12px; border: 2px solid #E5E7EB; border-radius: var(--btn-radius); font-family: inherit; box-sizing: border-box; text-align: center; font-size:14px; background: var(--card); color: var(--text); outline: none; transition: border-color 0.2s;}
+        input:focus { border-color: var(--primary); }
+        
+        button { width: 100%; padding: 12px; background: var(--primary); color: white; border: var(--border-style); border-radius: var(--btn-radius); font-weight: 600; font-size: 15px; cursor: pointer; transition: 0.2s; margin-bottom: 10px; font-family: inherit; }
+        button:hover { filter: brightness(0.9); transform: translateY(-2px); } button:active { transform: scale(0.98); }
+        button:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+        button.btn-green { background: var(--secondary); } button.btn-gray { background: #9CA3AF; color: #fff;} button.btn-danger { background: var(--danger); } button.btn-gold { background: var(--gold); } button.btn-purple { background: var(--purple); } button.btn-dark { background: #1F2937; } button.btn-pink { background: var(--pink); } button.btn-blue { background: #3B82F6; }
+        
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: none; justify-content: center; align-items: center; z-index: 1000; }
+        .modal-box { background: var(--card); color: var(--text); padding: 20px; border-radius: 15px; width: 85%; max-width: 350px; text-align: center; animation: popIn 0.3s; max-height: 80vh; overflow-y: auto; position: relative;}
+        @keyframes popIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        
+        /* Maintenance Overlay */
+        #maintenanceOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); color: white; display: none; justify-content: center; align-items: center; flex-direction: column; z-index: 99999; text-align: center; padding:20px; }
+
+        .vip-glow { box-shadow: 0 0 10px var(--gold), 0 0 20px var(--gold); border: 2px solid var(--gold) !important; animation: vipPulse 1.5s infinite; }
+        .vip-text { color: var(--gold); font-weight: 900; text-shadow: 0 0 5px rgba(245, 158, 11, 0.5); }
+        @keyframes vipPulse { 0% { box-shadow: 0 0 5px var(--gold); } 50% { box-shadow: 0 0 20px var(--gold); } 100% { box-shadow: 0 0 5px var(--gold); } }
+
+        #toastNotif { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.9); color: white; padding: 12px 25px; border-radius: 20px; font-weight: bold; font-size: 14px; z-index: 9999; display: none; border: 2px solid var(--gold); box-shadow: 0 4px 15px rgba(0,0,0,0.5); animation: slideDown 0.3s; }
+        @keyframes slideDown { from { top: -50px; opacity: 0; } to { top: 20px; opacity: 1; } }
+        
+        .avatar-selection { display: flex; justify-content: center; flex-wrap: wrap; gap: 10px; margin-bottom: 15px; } .avatar-opt { width: 50px; height: 50px; border-radius: 50%; border: 3px solid transparent; cursor: pointer; opacity: 0.5; overflow: hidden; display: flex; align-items:center; justify-content:center; background:#f0f0f0; transition:0.2s;} .avatar-opt:hover { opacity:0.8;} .avatar-opt.selected { border-color: var(--primary); opacity: 1; transform: scale(1.15); box-shadow: 0 4px 10px rgba(79, 70, 229, 0.3);} .avatar-opt img { width: 100%; height: 100%; object-fit: cover; }
+        
+        .room-list { max-height: 250px; overflow-y: auto; text-align: left; margin-bottom: 15px; } .room-item { background: rgba(0,0,0,0.03); border: 1px solid rgba(0,0,0,0.08); padding: 12px; border-radius: 12px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;} .room-item button { width: auto; margin: 0; padding: 8px 15px; font-size: 12px; }
+        .player-badge { background: rgba(0,0,0,0.05); padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; display: inline-flex; align-items: center; gap: 8px; border: 1px solid rgba(0,0,0,0.1); cursor: pointer; margin:5px;} .player-badge img { width: 24px; height: 24px; border-radius: 50%; object-fit:cover; }
+        
+        .score-board { display: flex; justify-content: space-between; background: rgba(0,0,0,0.05); padding: 10px; border-radius: 10px; margin-bottom: 10px; font-size: 12px; border: 1px solid rgba(0,0,0,0.1); align-items: center;}
+        .player-info { display: flex; align-items: center; gap: 5px; flex-direction: column; } .player-info img { width: 30px; height: 30px; border-radius: 50%; border: 2px solid var(--primary); object-fit:cover;} .player-info span { font-weight: bold; color: var(--primary); font-size: 11px;}
+        .timer-info { text-align: center; font-weight: 800; color: var(--danger); font-size: 22px;}
+        
+        .canvas-container { position: relative; margin-bottom: 10px; }
+        #gameCanvas { background: #fff; border: 2px solid #E5E7EB; border-radius: 12px; cursor: crosshair; touch-action: none; width: 100%; aspect-ratio: 4/5; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .toolbar { display: flex; flex-wrap: wrap; gap: 5px; justify-content: center; margin-bottom: 5px; padding: 5px; background: rgba(0,0,0,0.05); border-radius: 10px; }
+        .tool-btn { width: auto; padding: 6px 15px; margin:0; font-size: 12px; background: rgba(0,0,0,0.1); color: var(--text); border-radius: 20px;} .tool-btn.active { background: var(--primary); color: white; }
+        .color-palette { display: flex; flex-wrap: wrap; gap: 5px; justify-content: center; margin-bottom: 10px; } .color-btn { width: 28px; height: 28px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; } .color-btn.active { border-color: #000; transform: scale(1.2); }
+        
+        .chat-box { background: rgba(0,0,0,0.02); padding: 10px; border-radius: 10px; height: 110px; overflow-y: auto; text-align: left; font-size: 13px; margin-bottom: 10px; border: 1px solid rgba(0,0,0,0.1);} .chat-msg { border-bottom: 1px solid rgba(0,0,0,0.05); padding: 5px 0; } .chat-msg img { width: 20px; height: 20px; border-radius: 50%; vertical-align: middle; margin-right: 5px; object-fit:cover;} .sys-msg { color: var(--primary); font-style: italic; font-weight: bold; text-align: center; }
+        
+        .coin-display { background: var(--gold); color: #fff; padding: 6px 18px; border-radius: 20px; font-weight: 800; font-size: 15px; margin-bottom: 15px; display: inline-flex; align-items:center; gap:5px; box-shadow: 0 4px 6px rgba(245, 158, 11, 0.3);}
+        .shop-item { border: 2px solid rgba(0,0,0,0.1); border-radius: 10px; padding: 10px; margin-bottom: 10px; display:flex; justify-content:space-between; align-items:center; background: rgba(0,0,0,0.02);}
+        
+        #gachaChest { font-size: 80px; margin: 20px 0; display: inline-block; filter: drop-shadow(0 10px 10px rgba(0,0,0,0.2)); transition: 0.3s; cursor: pointer;}
+        .shake-animation { animation: chestShake 0.5s ease-in-out infinite; }
+        @keyframes chestShake { 0% { transform: rotate(0deg) scale(1); } 25% { transform: rotate(-10deg) scale(1.1); } 50% { transform: rotate(0deg) scale(1.1); } 75% { transform: rotate(10deg) scale(1.1); } 100% { transform: rotate(0deg) scale(1); } }
+        
+        .prize-showcase { animation: popPop 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275); margin-top:10px; display:none; flex-direction:column; align-items:center; }
+        .prize-showcase img { width: 80px; height: 80px; border-radius: 50%; border: 4px solid var(--gold); box-shadow: 0 0 20px var(--gold); object-fit: cover;}
+        @keyframes popPop { 0% { transform: scale(0.1); opacity:0;} 70% { transform: scale(1.2); opacity:1;} 100% { transform: scale(1); opacity:1;} }
+        
+        /* 2v2 Shuffle Overlay */
+        #coopShuffleOverlay { position: absolute; top:0; left:0; width:100%; height:100%; background: var(--card); z-index: 100; border-radius:20px; display:none; flex-direction:column; justify-content:center; align-items:center;}
+        .team-box { width: 90%; padding: 15px; border-radius: 10px; margin-bottom: 10px; font-weight: bold; font-size:18px;}
+        .team-a { background: rgba(79, 70, 229, 0.1); border: 2px solid var(--primary); color: var(--primary); }
+        .team-b { background: rgba(239, 68, 68, 0.1); border: 2px solid var(--danger); color: var(--danger); }
+        .vs-text { font-size: 28px; font-weight: 900; color: var(--gold); margin: 10px 0; font-style: italic; text-shadow: 2px 2px 0px rgba(0,0,0,0.1);}
+
+        /* Admin Panel Container */
+        .admin-panel { margin-top:15px; border-top: 2px dashed rgba(0,0,0,0.1); padding-top:15px; background: rgba(0,0,0,0.02); border-radius: 10px; padding: 15px; }
+        .admin-title { font-weight:800; color:var(--danger); margin-bottom:10px; display:flex; justify-content:center; align-items:center; gap:5px; }
+    </style>
+</head>
+<body>
+
+<!-- Maintenance Full Screen Overlay -->
+<div id="maintenanceOverlay">
+    <i class="fa-solid fa-triangle-exclamation" style="color:var(--danger); font-size:50px; margin-bottom:15px;"></i>
+    <h1 style="color:white; margin:0;">SERVER MAINTENANCE</h1>
+    <p style="color:#aaa;">Sedang ada perbaikan sistem. Silakan kembali nanti.</p>
+</div>
+
+<div class="particles-bg" id="particlesBg"></div>
+<div id="toastNotif">Notif</div>
+
+<!-- AUDIO -->
+<audio id="sfxBenar" src="https://actions.google.com/sounds/v1/cartoon/cartoon_boing.ogg" preload="auto"></audio>
+<audio id="sfxGacha" src="https://actions.google.com/sounds/v1/foley/metal_latch.ogg" preload="auto"></audio>
+<audio id="sfxJackpot" src="https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg" preload="auto"></audio>
+<audio id="sfxVIP" src="https://actions.google.com/sounds/v1/cartoon/magic_chime_chord.ogg" preload="auto"></audio>
+<audio id="sfxWaktu" src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg" preload="auto"></audio>
+<audio id="sfxCat" src="https://actions.google.com/sounds/v1/water/water_splash.ogg" preload="auto"></audio>
+
+<!-- MODAL UMUM -->
+<div id="customModal" class="modal-overlay">
+    <div class="modal-box" id="modalBoxCont">
+        <div id="modalTitle" style="font-weight:bold; font-size:18px; margin-bottom:10px;">Alert</div>
+        <div id="modalContent" style="font-size:14px; margin-bottom:15px; opacity:0.8;">Message</div>
+        <input type="text" id="modalInput" style="display:none;" placeholder="...">
+        <div id="modalActions" style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap;"></div>
+    </div>
+</div>
+
+<div class="container">
+    <div class="top-ui">
+        <div class="server-status"><span id="serverStatusText">Menghubungkan...</span><div id="serverStatusDot" class="status-dot"></div></div>
+    </div>
+    
+    <h1><i class="fa-solid fa-palette"></i> Mabar Pro</h1>
+
+    <!-- 0. PROFILING (SELALU AKTIF PERTAMA, ANTI BLANK) -->
+    <div id="screen-profile" class="screen active">
+        <p style="font-size: 14px; opacity: 0.7; margin-bottom: 10px;">Pilih Avatar & Nama Kamu!</p>
+        <div class="avatar-selection" id="avatarSelection">
+            <div class="avatar-opt selected" onclick="selectAvatar(this, 'https://api.dicebear.com/7.x/pixel-art/svg?seed=Felix')"><img src="https://api.dicebear.com/7.x/pixel-art/svg?seed=Felix"></div>
+            <div class="avatar-opt" onclick="selectAvatar(this, 'https://api.dicebear.com/7.x/pixel-art/svg?seed=Aneka')"><img src="https://api.dicebear.com/7.x/pixel-art/svg?seed=Aneka"></div>
+            <div class="avatar-opt" onclick="selectAvatar(this, 'https://api.dicebear.com/7.x/pixel-art/svg?seed=Jude')"><img src="https://api.dicebear.com/7.x/pixel-art/svg?seed=Jude"></div>
+            
+            <!-- UPLOAD GAMBAR DARI HP -->
+            <label class="avatar-opt" id="customAvatarContainer" style="color:var(--primary); font-size:20px; position:relative;" title="Upload dari Galeri">
+                <i id="customIcon" class="fa-solid fa-image"></i>
+                <img id="customAvatarPreview" src="" style="display:none; position:absolute; width:100%; height:100%; top:0; left:0; object-fit:cover;">
+                <input type="file" accept="image/*" style="display:none;" onchange="handleFileUpload(event)">
+            </label>
+        </div>
+        <input type="text" id="usernameInput" placeholder="Nama Kamu (Max 10)" maxlength="10" onkeyup="checkAdminSecret()">
+        <!-- Secret PIN untuk Admin Xenaz -->
+        <input type="password" id="secretPin" placeholder="PIN Admin (Xenaz Only)" style="display:none; border-color:var(--danger); color:var(--danger); font-weight:bold;">
+        
+        <button onclick="saveProfile()" class="btn-green"><i class="fa-solid fa-arrow-right"></i> Masuk Game</button>
+        <button onclick="showScreen('screen-home')" class="btn-gray" id="btnBatalEdit" style="display:none;">Batal</button>
+    </div>
+
+    <!-- 1. HOME -->
+    <div id="screen-home" class="screen">
+        <div class="coin-display"><i class="fa-solid fa-coins"></i> <span id="myCoinDisplay">0</span></div>
+        <div style="margin-bottom: 20px; font-weight:bold; color:var(--primary); font-size:18px;">
+            Halo, <span id="displayMyName" style="cursor:pointer;" onclick="showProfileCard(myUser.name)">Kamu</span>!
+        </div>
+        
+        <!-- MATCHMAKING & ROOMS -->
+        <div style="display:flex; gap:10px; margin-bottom:15px;">
+            <button onclick="showScreen('screen-create')"><i class="fa-solid fa-plus"></i> Host Room</button>
+            <button class="btn-green" onclick="loadRooms(); showScreen('screen-join')"><i class="fa-solid fa-list"></i> Join Room</button>
+        </div>
+        <button class="btn-blue" onclick="quickMatch()"><i class="fa-solid fa-bolt"></i> Cari Lawan Cepat (Matchmaking)</button>
+        
+        <hr style="border:none; border-top:1px solid rgba(0,0,0,0.1); margin:15px 0;">
+        
+        <!-- FITUR UTAMA -->
+        <div style="display:flex; flex-wrap:wrap; gap:10px; margin-bottom:10px;">
+            <button class="btn-gold" style="flex:1; margin:0;" onclick="showShop()"><i class="fa-solid fa-store"></i> Toko Tema</button>
+            <button class="btn-pink" style="flex:1; margin:0;" onclick="showScreen('screen-gacha'); updateGachaCoinDisplay();"><i class="fa-solid fa-gift"></i> Gacha (100C)</button>
+        </div>
+        
+        <div style="display:flex; flex-wrap:wrap; gap:10px; margin-bottom:15px;">
+            <button class="btn-dark" style="flex:1; margin:0;" onclick="showLeaderboard()"><i class="fa-solid fa-trophy"></i> Top 10 Player</button>
+            <button class="btn-secondary" style="flex:1; margin:0; background:#3B82F6; color:white;" onclick="openRateArt()"><i class="fa-solid fa-heart"></i> Galeri 2v2</button>
+        </div>
+        
+        <button class="btn-gray" onclick="openEditProfile()"><i class="fa-solid fa-user-edit"></i> Edit Profil</button>
+
+        <!-- PANEL ADMIN KHUSUS XENAZ -->
+        <div id="adminPanel" class="admin-panel" style="display:none;">
+            <div class="admin-title"><i class="fa-solid fa-user-shield"></i> MENU DEWA XENAZ</div>
+            <button class="btn-danger" id="btnMaintToggle" onclick="toggleMaintenance()">Set Maintenance (Off)</button>
+            <div style="display:flex; gap:10px;">
+                <button class="btn-purple" style="margin:0;" onclick="promptGiftCoin()"><i class="fa-solid fa-gift"></i> Gift Coin</button>
+                <button class="btn-gold" style="margin:0;" onclick="injectCoin()"><i class="fa-solid fa-syringe"></i> Suntik Koin</button>
+            </div>
+            <button class="btn-dark" style="margin-top:10px;" onclick="unlockAllThemes()"><i class="fa-solid fa-unlock-keyhole"></i> Unlock All Tema</button>
+            <button class="btn-blue" style="margin-top:10px;" onclick="spectateMenu()"><i class="fa-solid fa-eye"></i> Tonton Live Game (Spectate)</button>
+        </div>
+    </div>
+
+    <!-- HALAMAN GACHA -->
+    <div id="screen-gacha" class="screen">
+        <h3 style="color:var(--pink); margin-top:0;"><i class="fa-solid fa-gift"></i> Gacha Kosmetik</h3>
+        <div class="coin-display"><i class="fa-solid fa-coins"></i> <span id="gachaCoinDisplay">0</span></div>
+        
+        <div style="margin: 20px 0;">
+            <div id="gachaChest" onclick="startGacha()">🧰</div>
+            <h2 id="gachaResultText" style="color:var(--primary); font-weight:900; margin-top:15px; display:none;">---</h2>
+            <div id="prizeShowcase" class="prize-showcase">
+                <img id="prizeImage" src="">
+                <p id="prizeDesc" style="font-size:12px; font-weight:bold; color:var(--gold); margin-top:5px;"></p>
+            </div>
+        </div>
+        
+        <button id="btnSpinGacha" class="btn-pink" onclick="startGacha()"><i class="fa-solid fa-key"></i> Buka Peti (100 Koin)</button>
+        <button class="btn-gray" onclick="showScreen('screen-home')">Kembali</button>
+    </div>
+
+    <!-- TOKO TEMA -->
+    <div id="screen-shop" class="screen">
+        <h3 style="margin-top:0">Toko Tema</h3>
+        <div class="coin-display"><i class="fa-solid fa-coins"></i> <span id="shopCoinDisplay">0</span></div>
+        
+        <div class="shop-item"> <div style="text-align:left;"><b>Default</b></div> <button id="btnTheme_default" onclick="buyOrEquipTheme('default', 0)" style="width:auto; margin:0;">Pakai</button> </div>
+        <div class="shop-item"> <div style="text-align:left;"><b>Dark Neon</b><br><span>500 Koin</span></div> <button id="btnTheme_dark" onclick="buyOrEquipTheme('dark', 500)" style="width:auto; margin:0;" class="btn-gold">Beli</button> </div>
+        <div class="shop-item"> <div style="text-align:left;"><b>Kawaii Pink</b><br><span>500 Koin</span></div> <button id="btnTheme_kawaii" onclick="buyOrEquipTheme('kawaii', 500)" style="width:auto; margin:0;" class="btn-gold">Beli</button> </div>
+        <div class="shop-item"> <div style="text-align:left;"><b>Retro Pixel</b><br><span>500 Koin</span></div> <button id="btnTheme_retro" onclick="buyOrEquipTheme('retro', 500)" style="width:auto; margin:0;" class="btn-gold">Beli</button> </div>
+        
+        <h4 style="margin-top:15px; color:var(--primary); font-size:14px;"><i class="fa-solid fa-lock"></i> Eksklusif Gacha</h4>
+        <div class="shop-item" style="border-color:var(--gold);"> 
+            <div style="text-align:left;"><b>Ocean Blue <i class="fa-solid fa-water"></i></b></div> 
+            <button id="btnTheme_ocean" onclick="buyOrEquipTheme('ocean', 9999)" style="width:auto; margin:0; background:gray;" disabled>Gacha Only</button> 
+        </div>
+        <div class="shop-item" style="border-color:var(--gold);"> 
+            <div style="text-align:left;"><b>Deep Space <i class="fa-solid fa-meteor"></i></b></div> 
+            <button id="btnTheme_space" onclick="buyOrEquipTheme('space', 9999)" style="width:auto; margin:0; background:gray;" disabled>Gacha Only</button> 
+        </div>
+        
+        <button class="btn-gray" onclick="showScreen('screen-home')" style="margin-top:10px;">Kembali</button>
+    </div>
+
+    <!-- LEADERBOARD -->
+    <div id="screen-leaderboard" class="screen">
+        <h3 style="color:var(--gold);"><i class="fa-solid fa-trophy"></i> Top 10 Player</h3>
+        <div id="leaderboardList" style="max-height: 350px; overflow-y:auto; margin-bottom:15px; text-align:left;"></div>
+        <button class="btn-gray" onclick="showScreen('screen-home')">Kembali</button>
+    </div>
+
+    <!-- RATE ART -->
+    <div id="screen-rate-art" class="screen">
+        <h3 style="color:var(--primary);"><i class="fa-solid fa-paint-roller"></i> Galeri 2v2 Co-op</h3>
+        <p style="font-size:12px; opacity:0.8;">Beri 1 <b>Like</b> untuk gambar terbaik!</p>
+        <div id="rateArtList" style="max-height: 400px; overflow-y:auto; margin-bottom:15px; padding-bottom:10px;"></div>
+        <button class="btn-gray" onclick="showScreen('screen-home')">Kembali</button>
+    </div>
+
+    <!-- CREATE ROOM -->
+    <div id="screen-create" class="screen">
+        <h3 style="margin-top:0">Buat Room Baru</h3>
+        <select id="hostGameMode" onchange="updateMaxPlayersUI()">
+            <option value="guess">Mode: Tebak Gambar (1v1)</option>
+            <option value="battle">Mode: Draw Battle (Multiplayer)</option>
+            <option value="coop" style="color:var(--primary); font-weight:bold;">🔥 Mode: Co-op 2v2 (4 Pemain)</option>
+        </select>
+        <select id="hostMaxPlayers" style="display:none;">
+            <option value="2">2 Pemain</option><option value="3">3 Pemain</option>
+            <option value="4">4 Pemain</option><option value="5">5 Pemain</option>
+        </select>
+        <select id="hostDrawTime" style="display:none;">
+            <option value="60">Waktu: 60 Detik</option>
+            <option value="100" selected>Waktu: 100 Detik</option>
+            <option value="150">Waktu: 150 Detik</option>
+            <option value="200">Waktu: 200 Detik</option>
+        </select>
+        <input type="text" id="hostRoomName" placeholder="Nama Room (Max 15)" maxlength="15">
+        <input type="password" id="hostRoomPass" placeholder="Password (Kosongkan = Publik)">
+        <button class="btn-green" onclick="createRoom()">Buat Room</button>
+        <button class="btn-gray" onclick="showScreen('screen-home')">Batal</button>
+    </div>
+
+    <!-- JOIN ROOM -->
+    <div id="screen-join" class="screen">
+        <h3 style="margin-top:0">Daftar Room</h3>
+        <div class="room-list" id="roomListDiv"></div>
+        <button class="btn-gray" onclick="showScreen('screen-home')">Kembali</button>
+    </div>
+
+    <!-- LOBBY -->
+    <div id="screen-lobby" class="screen">
+        <h3 id="lobbyRoomName" style="margin-top:0; color:var(--primary);">Nama Room</h3>
+        <div id="lobbyPlayers" style="margin-bottom:15px; display:flex; flex-wrap:wrap; justify-content:center;"></div>
+        <button id="btnStartGame" class="btn-green" style="display:none;" onclick="startGame()">Mulai Game!</button>
+        <button class="btn-danger" onclick="leaveRoom()">Keluar Room</button>
+    </div>
+
+    <!-- GAME AREA -->
+    <div id="screen-game" class="screen">
+        
+        <!-- Spectator Badge -->
+        <div id="spectatorBadge" style="display:none; position:absolute; top:10px; right:10px; background:var(--danger); color:white; padding:5px 10px; border-radius:10px; font-weight:bold; font-size:12px; z-index:100; box-shadow:0 0 10px red; animation: pulse 2s infinite;"><i class="fa-solid fa-eye"></i> LIVE SPECTATOR</div>
+
+        <!-- 2v2 Overlay -->
+        <div id="coopShuffleOverlay">
+            <h2 style="color:var(--text); margin-bottom:5px;">MENGACAK TIM...</h2>
+            <div id="coopTeamsDisplay" style="width:100%; display:none; flex-direction:column; align-items:center;">
+                <div class="team-box team-a">TIM A<br><span id="teamANames" style="font-size:14px;"></span></div>
+                <div class="vs-text">VS</div>
+                <div class="team-box team-b">TIM B<br><span id="teamBNames" style="font-size:14px;"></span></div>
+            </div>
+        </div>
+
+        <!-- Scoreboard Guess -->
+        <div id="sb-guess" class="score-board" style="display:none;">
+            <div class="player-info"><img id="g-p1-img" src=""><span id="g-p1-name">P1</span></div>
+            <div style="display:flex; flex-direction:column; align-items:center;">
+                <div style="font-size: 10px; font-weight:bold;">WAKTU</div>
+                <div class="timer-info" id="g-timer">60</div>
+            </div>
+            <div class="player-info"><img id="g-p2-img" src=""><span id="g-p2-name">P2</span></div>
+        </div>
+
+        <!-- Scoreboard Battle / Coop -->
+        <div id="sb-battle" style="display:none; justify-content:space-between; align-items:center; background:rgba(0,0,0,0.05); padding:10px; border-radius:10px; margin-bottom:10px; border:1px solid rgba(0,0,0,0.1);">
+            <div style="color:var(--gold); font-weight:bold; font-size:14px;" id="battleTitle">BATTLE</div>
+            <div style="color:var(--danger); font-size:20px; font-weight:800;" id="b-timer">100</div>
+        </div>
+        
+        <div id="slotMachine" style="display:none; font-size:20px; font-weight:bold; color:var(--primary); margin-bottom:10px;">---</div>
+        <div style="text-align: center;"><div id="word-display" style="font-size: 16px; font-weight: 800; color: var(--secondary); margin-bottom: 10px;">Instruksi</div></div>
+
+        <!-- Canvas -->
+        <div class="canvas-container" id="canvasArea">
+            <canvas id="gameCanvas" width="400" height="480"></canvas>
+            <div id="drawTools" style="display:none;">
+                <div class="toolbar">
+                    <button class="tool-btn active" id="btnBrush" onclick="setTool('brush')"><i class="fa-solid fa-paint-brush"></i> Kuas</button>
+                    <button class="tool-btn" id="btnBucket" onclick="setTool('bucket')"><i class="fa-solid fa-fill-drip"></i> Cat</button>
+                    <button class="tool-btn" id="btnEraser" onclick="setTool('eraser')"><i class="fa-solid fa-eraser"></i> Hapus</button>
+                    <button class="tool-btn" onclick="clearCanvasEvent()"><i class="fa-solid fa-trash"></i> Reset</button>
+                </div>
+                <div style="margin-bottom: 5px; display:flex; align-items:center; justify-content:center; gap:10px;">
+                    <span style="font-size:11px; font-weight:bold;">Ukuran:</span>
+                    <input type="range" id="brushSize" min="1" max="25" value="4" onchange="ctx.lineWidth = this.value; ctx.lineCap = 'round';" style="width: 150px; margin:0;">
+                </div>
+                <div class="color-palette" id="colorPalette"></div>
+            </div>
+        </div>
+
+        <!-- Area Tebak (Untuk mode Guess) -->
+        <div id="guessArea" style="display:none;">
+            <div class="chat-box" id="chatBox"></div>
+            <div style="display:flex; gap:10px;">
+                <input type="text" id="guessInput" placeholder="Ketik jawabanmu..." onkeypress="if(event.key==='Enter') submitGuess()">
+                <button style="width:auto; margin:0; padding:0 20px;" onclick="submitGuess()"><i class="fa-solid fa-paper-plane"></i></button>
+            </div>
+        </div>
+
+        <!-- Area Voting (Akhir Game) -->
+        <div id="votingArea" style="display:none; max-height:400px; overflow-y:auto; padding-bottom:10px;"></div>
+        
+        <button class="btn-danger" style="margin-top:10px;" onclick="leaveRoom()">Keluar Game</button>
+    </div>
+</div>
+
+<script>
+    // --- DATABASE & INISIALISASI AMAN ---
+    let db = null;
+    let myUser = { name: '', avatar: 'https://api.dicebear.com/7.x/pixel-art/svg?seed=Felix', coins: 500, wins: 0, totalGames: 0, ownedThemes: ['default'], activeTheme: 'default', isAdmin: false };
+    const animatedAvatars = ["https://media.giphy.com/media/sIIhZliB2McAo/giphy.gif", "https://media.giphy.com/media/l41JSNjJd3KkZ6o3C/giphy.gif", "https://media.giphy.com/media/11ISwbgCxEzMyY/giphy.gif"];
+    const wordsDB = ["Apel", "Pisang", "Mobil", "Rumah", "Pohon", "Alien", "Robot", "Naga", "Pesawat", "Gunung", "Kucing"];
+    let maintenanceState = false;
+    
+    // Canvas setup
+    const canvas = document.getElementById('gameCanvas'); const ctx = canvas.getContext('2d');
+    let isDrawing = false, currentTool = 'brush', currentColor = '#000000';
+    let currentRoomId = '', isHost = false, roomListener = null, hostTimerInterval = null, gameMode = 'guess', targetWord = '', myRole = '', myTeam = '';
+
+    window.onload = () => {
+        setupColors();
+        
+        try {
+            if (typeof firebase !== 'undefined') {
+                const firebaseConfig = { apiKey: "AIzaSyBBNc_H9SA7WrIagS8f-5uHggeU7ODia7Q", authDomain: "qrtes12.firebaseapp.com", databaseURL: "https://qrtes12-default-rtdb.asia-southeast1.firebasedatabase.app/", projectId: "qrtes12", storageBucket: "qrtes12.firebasestorage.app" };
+                if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+                db = firebase.database();
+                
+                // Status Koneksi
+                db.ref(".info/connected").on("value", (snap) => { 
+                    if(snap.val()) { document.getElementById('serverStatusText').innerText = "Online"; document.getElementById('serverStatusDot').classList.add('online'); } 
+                    else { document.getElementById('serverStatusText').innerText = "Offline"; document.getElementById('serverStatusDot').classList.remove('online'); }
+                });
+
+                // Maintenance Check
+                db.ref('serverConfig/maintenance').on('value', snap => {
+                    maintenanceState = snap.val() || false;
+                    checkMaintenanceUI();
+                    let btn = document.getElementById('btnMaintToggle');
+                    if(btn) btn.innerText = maintenanceState ? "Set Maintenance (ON)" : "Set Maintenance (OFF)";
+                });
+
+                // Listen Coin Transfers
+                setInterval(() => {
+                    if(myUser.name && db) {
+                        db.ref('coin_transfers').orderByChild('to').equalTo(myUser.name).once('value', snap => {
+                            if(snap.exists()) {
+                                snap.forEach(c => {
+                                    let d = c.val(); myUser.coins += d.amount; saveLocal(); updateHomeUI();
+                                    showToast(`🎁 Kado Koin! +${d.amount} dari ${d.from}`);
+                                    db.ref('coin_transfers/'+c.key).remove();
+                                });
+                            }
+                        });
+                    }
+                }, 5000);
+            }
+        } catch (e) { console.warn("Firebase lambat/gagal muat."); }
+
+        try {
+            let saved = localStorage.getItem('mabarProV8');
+            if(saved) {
+                myUser = Object.assign(myUser, JSON.parse(saved));
+                if(myUser.name) {
+                    finishLoad(); // Kalau sudah ada profil, langsung masuk Home
+                    if(db) db.ref('users/' + myUser.name).once('value').then(snap => {
+                        if(snap.exists()) { let d = snap.val(); myUser.wins = d.wins||0; myUser.totalGames = d.totalGames||0; myUser.coins = d.coins||myUser.coins; saveLocal(); }
+                    });
+                }
+            }
+        } catch(e) {}
+    };
+
+    function checkMaintenanceUI() {
+        if (maintenanceState && !myUser.isAdmin) {
+            document.getElementById('maintenanceOverlay').style.display = 'flex';
+        } else {
+            document.getElementById('maintenanceOverlay').style.display = 'none';
+        }
+    }
+
+    // --- FUNGSI UI & ALAT BANTU ---
+    function showScreen(id) { document.querySelectorAll('.screen').forEach(s => s.classList.remove('active')); document.getElementById(id).classList.add('active'); }
+    function showModal(title, content, type='alert', onSub='') { 
+        document.getElementById('modalTitle').innerHTML = title; document.getElementById('modalContent').innerHTML = content; 
+        let act = document.getElementById('modalActions'), inp = document.getElementById('modalInput');
+        inp.style.display = 'none'; inp.value = '';
+        if(type === 'alert') act.innerHTML = `<button class="btn-green" onclick="closeModal()">OK</button>`;
+        else if(type === 'prompt') { inp.style.display = 'block'; act.innerHTML = `<button class="btn-gray" onclick="closeModal()">Batal</button><button class="btn-green" onclick="${onSub}()">OK</button>`; }
+        else if(type === 'custom') act.innerHTML = onSub;
+        document.getElementById('customModal').style.display = 'flex'; 
+    }
+    function closeModal() { document.getElementById('customModal').style.display = 'none'; }
+    function showToast(msg) { const t = document.getElementById('toastNotif'); t.innerText = msg; t.style.display = 'block'; setTimeout(()=>{t.style.display='none';}, 4000); }
+    function playSFX(id) { const sfx = document.getElementById(id); if(sfx) { sfx.currentTime = 0; sfx.play().catch(e=>{}); } }
+    function saveLocal() { try { localStorage.setItem('mabarProV8', JSON.stringify(myUser)); } catch(e){} updateHomeUI(); }
+
+    // --- PROFILING & AVATAR (Termasuk Upload Galeri) ---
+    function selectAvatar(el, url) { 
+        document.querySelectorAll('.avatar-opt').forEach(e=>e.classList.remove('selected')); 
+        el.classList.add('selected'); myUser.avatar = url; 
+        document.getElementById('customAvatarPreview').style.display = 'none'; document.getElementById('customIcon').style.display = 'block';
+    }
+    
+    function handleFileUpload(event) { 
+        const file = event.target.files[0]; if(!file) return; const reader = new FileReader(); 
+        reader.onload = (e) => { 
+            const img = new Image(); img.onload = () => { 
+                const cvs = document.createElement('canvas'); cvs.width = 100; cvs.height = 100; const cctx = cvs.getContext('2d'); cctx.drawImage(img, 0, 0, 100, 100); 
+                const b64 = cvs.toDataURL('image/jpeg', 0.8); 
+                document.querySelectorAll('.avatar-opt').forEach(el=>el.classList.remove('selected')); 
+                document.getElementById('customAvatarContainer').classList.add('selected'); 
+                document.getElementById('customAvatarPreview').src = b64; document.getElementById('customAvatarPreview').style.display='block'; 
+                document.getElementById('customIcon').style.display='none'; myUser.avatar = b64; 
+            }; img.src = e.target.result; 
+        }; reader.readAsDataURL(file); 
+    }
+
+    function checkAdminSecret() {
+        let val = document.getElementById('usernameInput').value;
+        if(val === 'Xenaz') { document.getElementById('secretPin').style.display = 'block'; } 
+        else { document.getElementById('secretPin').style.display = 'none'; }
+    }
+    
+    function saveProfile() {
+        const name = document.getElementById('usernameInput').value.trim(); 
+        if(!name) { showModal("Error", "Nama harus diisi!"); return; }
+        
+        // ADMIN AUTH CHECK
+        if(name === 'Xenaz') {
+            if(document.getElementById('secretPin').value === 'X0406') { myUser.isAdmin = true; showToast("Login Sukses: Dewa Xenaz!"); }
+            else { return showModal("Akses Ditolak", "PIN Admin Salah!"); }
+        } else { myUser.isAdmin = false; }
+
+        myUser.name = name; 
+        if(db) db.ref('users/' + myUser.name).update({ name: myUser.name, avatar: myUser.avatar, isAdmin: myUser.isAdmin });
+        saveLocal(); finishLoad();
+    }
+    
+    function openEditProfile() {
+        document.getElementById('usernameInput').value = myUser.name;
+        document.getElementById('btnBatalEdit').style.display = 'inline-block';
+        checkAdminSecret();
+        if(myUser.avatar.startsWith('data:') || myUser.avatar.includes('giphy.com')) {
+            document.querySelectorAll('.avatar-opt').forEach(el=>el.classList.remove('selected'));
+            document.getElementById('customAvatarContainer').classList.add('selected');
+            document.getElementById('customAvatarPreview').src = myUser.avatar;
+            document.getElementById('customAvatarPreview').style.display = 'block';
+            document.getElementById('customIcon').style.display = 'none';
+        }
+        showScreen('screen-profile');
+    }
+
+    function finishLoad() {
+        applyTheme(myUser.activeTheme);
+        checkMaintenanceUI();
+        updateHomeUI();
+        showScreen('screen-home');
+        
+        // Munculin Panel Admin kalau Xenaz
+        document.getElementById('adminPanel').style.display = myUser.isAdmin ? 'block' : 'none';
+    }
+
+    function updateHomeUI() {
+        let n = myUser.name; if(myUser.isAdmin) n += ' <i class="fa-solid fa-crown" style="color:var(--gold);"></i>';
+        document.getElementById('displayMyName').innerHTML = n;
+        document.getElementById('myCoinDisplay').innerText = myUser.coins;
+        document.getElementById('shopCoinDisplay').innerText = myUser.coins;
+    }
+
+    // --- KARTU PROFIL INTERAKTIF ---
+    function showProfileCard(username) {
+        if(!db) return;
+        db.ref('users/' + username).once('value', snap => {
+            if(snap.exists()) {
+                let d = snap.val();
+                let wr = d.totalGames > 0 ? Math.round((d.wins / d.totalGames) * 100) : 0;
+                let html = `
+                    <img src="${d.avatar}" style="width:70px; height:70px; border-radius:50%; border:3px solid var(--primary); object-fit:cover;">
+                    <h2 style="margin:10px 0 5px 0; color:var(--text);">${d.name} ${d.isAdmin?'<i class="fa-solid fa-crown" style="color:var(--gold);"></i>':''}</h2>
+                    <div style="display:flex; justify-content:space-around; background:rgba(0,0,0,0.05); padding:10px; border-radius:10px; margin-top:15px;">
+                        <div><div style="font-size:11px; opacity:0.7;">Win Rate</div><div style="font-weight:bold; color:var(--primary); font-size:18px;">${wr}%</div></div>
+                        <div><div style="font-size:11px; opacity:0.7;">Main</div><div style="font-weight:bold; color:var(--primary); font-size:18px;">${d.totalGames||0}</div></div>
+                        <div><div style="font-size:11px; opacity:0.7;">Menang</div><div style="font-weight:bold; color:var(--primary); font-size:18px;">${d.wins||0}</div></div>
+                    </div>
+                    <button class="btn-gray" style="margin-top:15px;" onclick="closeModal()">Tutup</button>
+                `;
+                showModal("Kartu Profil", html, "custom");
+            }
+        });
+    }
+
+    // --- FITUR ADMIN DEWA XENAZ ---
+    function toggleMaintenance() {
+        if(!db) return;
+        let newState = !maintenanceState;
+        db.ref('serverConfig/maintenance').set(newState);
+        showToast(newState ? "Maintenance DIHIDUPKAN" : "Maintenance DIMATIKAN");
+    }
+    
+    function promptGiftCoin() { showModal('Transfer Koin', '', 'custom', `<input type="text" id="trUser" placeholder="Username Tujuan"><input type="number" id="trAmount" placeholder="Jumlah"><button class="btn-purple" onclick="executeTransfer()">Kirim</button><button class="btn-gray" onclick="closeModal()">Batal</button>`); }
+    function executeTransfer() { 
+        let to = document.getElementById('trUser').value.trim(); let amt = parseInt(document.getElementById('trAmount').value); 
+        if(!to || isNaN(amt) || amt>myUser.coins) return showModal("Error", "Input salah atau koin kurang."); 
+        myUser.coins -= amt; saveLocal(); db.ref('coin_transfers').push({ to: to, from: myUser.name, amount: amt }); 
+        showModal("Sukses", `Berhasil kirim ${amt} Koin ke ${to}!`); 
+    }
+    
+    function injectCoin() {
+        myUser.coins += 10000; saveLocal(); updateHomeUI(); showToast("💉 SUNTIK KOIN BERHASIL! +10.000"); playSFX('sfxJackpot');
+    }
+    
+    function unlockAllThemes() {
+        myUser.ownedThemes = ['default', 'dark', 'kawaii', 'retro', 'ocean', 'space']; saveLocal(); updateHomeUI();
+        showToast("🔓 SEMUA TEMA PERMANEN TERBUKA!"); playSFX('sfxVIP');
+    }
+    
+    // SPECTATE FEATURE
+    function spectateMenu() {
+        if(!db) return;
+        document.getElementById('adminPanel').style.opacity = '0.5';
+        db.ref('rooms').once('value', snap => {
+            document.getElementById('adminPanel').style.opacity = '1';
+            let h = '<div style="max-height:250px; overflow-y:auto; text-align:left;">';
+            let found = false;
+            if(snap.exists()){
+                snap.forEach(c => {
+                    let d = c.val();
+                    if(d.phase === 'playing' || d.phase === 'shuffling') {
+                        found = true;
+                        h += `<div class="room-item" style="border-color:var(--danger);">
+                                <div><b>${d.name}</b><br><span style="font-size:11px;color:red;">🔴 LIVE (${d.mode})</span></div>
+                                <button class="btn-danger" onclick="joinSpectator('${c.key}')"><i class="fa-solid fa-eye"></i> Tonton</button>
+                              </div>`;
+                    }
+                });
+            }
+            h += '</div>';
+            if(!found) h = "<p>Tidak ada game yang sedang berjalan saat ini.</p>";
+            h += `<button class="btn-gray" style="margin-top:10px;" onclick="closeModal()">Tutup</button>`;
+            showModal("Live Spectate", h, "custom");
+        });
+    }
+
+    function joinSpectator(id) {
+        closeModal(); currentRoomId = id; isHost = false; myRole = 'spectator';
+        showScreen('screen-game');
+        document.getElementById('spectatorBadge').style.display = 'block';
+        document.getElementById('drawTools').style.display = 'none';
+        document.getElementById('guessArea').style.display = 'none';
+        
+        // Listen directly without joining player list
+        db.ref(`rooms/${currentRoomId}`).on('value', snap => {
+            let d = snap.val(); if(!d) return forceLeave("Room sudah ditutup.");
+            if(d.phase === 'gameover') processGameOver(d);
+            if(d.timer !== undefined) { document.getElementById('g-timer').innerText = d.timer; document.getElementById('b-timer').innerText = d.timer; }
+            
+            if(d.mode === 'guess') {
+                document.getElementById('sb-guess').style.display = 'flex'; document.getElementById('sb-battle').style.display = 'none';
+                let pKeys = Object.keys(d.players||{}); if(pKeys.length>=2) {
+                    document.getElementById('g-p1-name').innerText = pKeys[0]; document.getElementById('g-p1-img').src = d.players[pKeys[0]].avatar;
+                    document.getElementById('g-p2-name').innerText = pKeys[1]; document.getElementById('g-p2-img').src = d.players[pKeys[1]].avatar;
+                }
+                document.getElementById('guessArea').style.display = 'block'; document.getElementById('guessInput').style.display='none'; // hide input for spectator
+                document.getElementById('word-display').innerText = "LIVE TEBAK GAMBAR";
+            } else {
+                document.getElementById('sb-guess').style.display = 'none'; document.getElementById('sb-battle').style.display = 'flex';
+                document.getElementById('battleTitle').innerHTML = `<i class="fa-solid fa-eye"></i> SPECTATING`;
+                document.getElementById('word-display').innerText = "LIVE BATTLE / CO-OP";
+            }
+        });
+        
+        db.ref(`rooms/${currentRoomId}/drawing`).on('child_added', snap => {
+            let p = snap.val(); ctx.lineWidth = p.w || 4; ctx.strokeStyle = p.c; ctx.lineCap = "round";
+            if(p.t === 's') { ctx.beginPath(); ctx.moveTo(p.x, p.y); } else if(p.t === 'd') { ctx.lineTo(p.x, p.y); ctx.stroke(); } else if(p.t === 'f') { floodFill(p.x, p.y, hexToRgb(p.c)); }
+        });
+        db.ref(`rooms/${currentRoomId}/clear`).on('value', snap => { if(snap.val()) ctx.clearRect(0,0,canvas.width,canvas.height); });
+        db.ref(`rooms/${currentRoomId}/chats`).on('child_added', snap => { let chat = snap.val(); let div = document.createElement('div'); div.className = 'chat-msg'; if(chat.sys) div.innerHTML = `<div class="sys-msg">${chat.txt}</div>`; else div.innerHTML = `<img src="${chat.ava}"> <b>${chat.name}:</b> ${chat.txt}`; const cb = document.getElementById('chatBox'); cb.appendChild(div); cb.scrollTop = cb.scrollHeight; });
+    }
+
+    // --- TEMA & GACHA SYSTEM ---
+    const themeColors = { 
+        default: { '--bg': '#F3F4F6', '--card': '#FFFFFF', '--text': '#1F2937', '--primary': '#4F46E5', '--secondary': '#10B981' }, 
+        dark: { '--bg': '#111827', '--card': '#1F2937', '--text': '#F9FAFB', '--primary': '#8B5CF6', '--secondary': '#10B981' }, 
+        kawaii: { '--bg': '#FCE7F3', '--card': '#FBCFE8', '--text': '#831843', '--primary': '#EC4899', '--secondary': '#F472B6' }, 
+        retro: { '--bg': '#000000', '--card': '#222222', '--text': '#39FF14', '--primary': '#FF00FF', '--secondary': '#FFFF00' },
+        ocean: { '--bg': '#0284c7', '--card': '#0ea5e9', '--text': '#f0f9ff', '--primary': '#0c4a6e', '--secondary': '#38bdf8' },
+        space: { '--bg': '#0f172a', '--card': '#1e293b', '--text': '#f8fafc', '--primary': '#6366f1', '--secondary': '#8b5cf6' }
+    };
+    
+    let particleInterval = null;
+    function applyTheme(id) { 
+        const root = document.documentElement; const colors = themeColors[id]; 
+        for (let key in colors) { root.style.setProperty(key, colors[key]); } 
+        
+        clearInterval(particleInterval); const bg = document.getElementById('particlesBg'); bg.innerHTML = '';
+        if(id === 'ocean') { for(let i=0; i<15; i++) { let p = document.createElement('div'); p.className = 'bubble'; p.style.left = Math.random() * 100 + 'vw'; let s = Math.random()*20+5; p.style.width=s+'px'; p.style.height=s+'px'; p.style.animationDuration = (Math.random()*8+5)+'s'; bg.appendChild(p); } }
+        else if(id === 'space') { for(let i=0; i<15; i++) { let p = document.createElement('div'); p.className = 'meteor'; p.style.top = (Math.random()*100-50)+'vh'; p.style.right = (Math.random()*100-50)+'vw'; p.style.animationDuration = (Math.random()*2+1)+'s'; bg.appendChild(p); } }
+        else if(id === 'kawaii') { particleInterval = setInterval(()=>{ const s=document.createElement('div'); s.innerHTML='🌸'; s.className='sakura'; s.style.left=Math.random()*100+'vw'; s.style.fontSize=(Math.random()*15+10)+'px'; s.style.animationDuration=(Math.random()*3+5)+'s'; bg.appendChild(s); setTimeout(()=>s.remove(),8000); }, 400); }
+        else { for(let i=0; i<10; i++) { let p = document.createElement('div'); p.className = 'particle'; p.style.left = Math.random() * 100 + 'vw'; p.style.animationDuration = (Math.random()*10+10)+'s'; bg.appendChild(p); } }
+    }
+
+    function buyOrEquipTheme(id, price) { 
+        if(myUser.ownedThemes.includes(id)) { 
+            myUser.activeTheme = id; saveLocal(); applyTheme(id); showShop(); 
+        } else { 
+            if(myUser.coins >= price) { 
+                myUser.coins -= price; myUser.ownedThemes.push(id); myUser.activeTheme = id; 
+                saveLocal(); applyTheme(id); showShop(); playSFX('sfxBenar'); showModal("Sukses", "Tema dibeli!"); 
+            } else { showModal("Gagal", "Koin kurang!"); }
+        } 
+    }
+
+    function showShop() { 
+        ['default', 'dark', 'kawaii', 'retro'].forEach(id => {
+            const btn = document.getElementById('btnTheme_' + id);
+            if(myUser.activeTheme === id) { btn.innerText = "Dipakai"; btn.className = "btn-green"; }
+            else if(myUser.ownedThemes.includes(id)) { btn.innerText = "Pakai"; btn.className = "btn-purple"; }
+            else { btn.innerText = "Beli"; btn.className = "btn-gold"; }
+        });
+        ['ocean', 'space'].forEach(id => {
+            const btn = document.getElementById('btnTheme_' + id);
+            if(myUser.activeTheme === id) { btn.innerText = "Dipakai"; btn.className = "btn-green"; btn.disabled = false; btn.style.background=""; }
+            else if(myUser.ownedThemes.includes(id)) { btn.innerText = "Pakai"; btn.className = "btn-purple"; btn.disabled = false; btn.style.background=""; }
+            else { btn.innerText = "Gacha Only"; btn.style.background = "gray"; btn.disabled = true; }
+        });
+        showScreen('screen-shop'); 
+    }
+
+    let isGachaSpinning = false;
+    function updateGachaCoinDisplay() { document.getElementById('gachaCoinDisplay').innerText = myUser.coins; }
+    
+    function startGacha() {
+        if(isGachaSpinning) return;
+        if(myUser.coins < 100) { showModal("Gagal", "Butuh 100 Koin."); return; }
+        
+        isGachaSpinning = true; myUser.coins -= 100; updateGachaCoinDisplay(); saveLocal();
+        
+        playSFX('sfxGacha');
+        const chest = document.getElementById('gachaChest'); const resText = document.getElementById('gachaResultText');
+        const showcase = document.getElementById('prizeShowcase'); const btn = document.getElementById('btnSpinGacha');
+        
+        btn.disabled = true; resText.style.display = 'none'; showcase.style.display = 'none';
+        chest.classList.add('shake-animation'); chest.innerText = "🧰";
+        
+        setTimeout(() => {
+            chest.classList.remove('shake-animation');
+            let roll = Math.random() * 100; let result = ""; let bonus = 0; let showImg = false;
+            
+            if(roll <= 5) { 
+                if(myUser.ownedThemes.includes('space')) { chest.innerText = "🔄"; result = "Dapat Space lagi. +500 Koin!"; bonus = 500; resText.style.color = "var(--gold)"; }
+                else { chest.innerText = "🌌"; result = "Dapat Tema Deep Space!"; myUser.ownedThemes.push('space'); myUser.activeTheme = 'space'; applyTheme('space'); resText.style.color = "var(--primary)"; playSFX('sfxVIP'); }
+            }
+            else if(roll <= 15) { 
+                if(myUser.ownedThemes.includes('ocean')) { chest.innerText = "🔄"; result = "Dapat Ocean lagi. +300 Koin!"; bonus = 300; resText.style.color = "var(--gold)"; }
+                else { chest.innerText = "🌊"; result = "Dapat Tema Ocean Blue!"; myUser.ownedThemes.push('ocean'); myUser.activeTheme = 'ocean'; applyTheme('ocean'); resText.style.color = "var(--primary)"; playSFX('sfxVIP'); }
+            }
+            else if(roll <= 35) { 
+                let gifUrl = animatedAvatars[Math.floor(Math.random() * animatedAvatars.length)];
+                chest.innerText = "📸"; result = "Dapat Avatar GIF Animasi!"; resText.style.color = "var(--pink)"; playSFX('sfxBenar');
+                myUser.avatar = gifUrl; document.getElementById('prizeImage').src = gifUrl; document.getElementById('prizeDesc').innerText = "Otomatis Dipakai di Profil"; showImg = true;
+                if(db) db.ref('users/' + myUser.name).update({ avatar: gifUrl });
+            }
+            else if(roll <= 60) { 
+                chest.innerText = "💵"; result = "Balik Modal! +100 Koin"; bonus = 100; resText.style.color = "var(--secondary)";
+            } else { 
+                chest.innerText = "💩"; result = "ZONK! +5 Koin"; bonus = 5; resText.style.color = "var(--danger)";
+            }
+            
+            resText.innerText = result; resText.style.display = 'block'; if(showImg) showcase.style.display = 'flex';
+            myUser.coins += bonus; saveLocal(); updateGachaCoinDisplay();
+            isGachaSpinning = false; btn.disabled = false;
+        }, 1500); 
+    }
+
+    // --- LEADERBOARD & RATE ART ---
+    function showLeaderboard() {
+        if(!db) return showModal("Error", "Offline");
+        showScreen('screen-leaderboard');
+        document.getElementById('leaderboardList').innerHTML = '<center>Loading...</center>';
+        db.ref('users').orderByChild('wins').limitToLast(10).once('value', snap => {
+            let arr = []; snap.forEach(c => { arr.push(c.val()); }); arr.reverse(); let h = '';
+            arr.forEach((u, i) => {
+                h += `<div class="room-item" style="cursor:pointer;" onclick="showProfileCard('${u.name}')">
+                        <div style="display:flex; align-items:center; gap:10px;">
+                            <div style="font-weight:bold; color:var(--primary); width:20px;">#${i+1}</div>
+                            <img src="${u.avatar}" style="width:35px; height:35px; border-radius:50%; object-fit:cover;">
+                            <div>${u.name} ${u.isAdmin?'<i class="fa-solid fa-crown" style="color:var(--gold); font-size:10px;"></i>':''}</div>
+                        </div>
+                        <div style="font-weight:bold; color:var(--secondary);">${u.wins||0} Win</div>
+                      </div>`;
+            });
+            document.getElementById('leaderboardList').innerHTML = h || '<p>Belum ada data.</p>';
+        });
+    }
+
+    function openRateArt() {
+        if(!db) return showModal("Error", "Offline");
+        showScreen('screen-rate-art');
+        document.getElementById('rateArtList').innerHTML = '<center>Loading...</center>';
+        db.ref('rate_art').limitToLast(10).once('value', snap => {
+            let arr = []; snap.forEach(c => { let d = c.val(); d.key = c.key; arr.push(d); }); arr.reverse(); let h = '';
+            arr.forEach(d => {
+                let vA = d.votesA || 0; let vB = d.votesB || 0;
+                let hasVoted = d.voters && d.voters[myUser.name];
+                h += `<div style="background:rgba(0,0,0,0.02); padding:15px; border-radius:12px; margin-bottom:15px; border:2px solid rgba(0,0,0,0.05);">
+                        <div style="font-weight:bold; margin-bottom:10px; color:var(--primary); text-align:center;">Tema: ${d.word.toUpperCase()}</div>
+                        <div style="display:flex; justify-content:space-between; gap:10px;">
+                            <div style="width:48%; text-align:center;">
+                                <div style="font-size:12px; font-weight:bold; color:var(--primary);">TIM A</div>
+                                <img src="${d.imgA}" style="width:100%; border-radius:10px; border:1px solid #ccc; background:#fff;">
+                                <button class="btn-green" style="margin-top:8px; font-size:12px;" ${hasVoted?'disabled':''} onclick="voteArt('${d.key}', 'A')"><i class="fa-solid fa-thumbs-up"></i> ${vA}</button>
+                            </div>
+                            <div style="width:48%; text-align:center;">
+                                <div style="font-size:12px; font-weight:bold; color:var(--danger);">TIM B</div>
+                                <img src="${d.imgB}" style="width:100%; border-radius:10px; border:1px solid #ccc; background:#fff;">
+                                <button class="btn-danger" style="margin-top:8px; font-size:12px;" ${hasVoted?'disabled':''} onclick="voteArt('${d.key}', 'B')"><i class="fa-solid fa-thumbs-up"></i> ${vB}</button>
+                            </div>
+                        </div>
+                      </div>`;
+            });
+            document.getElementById('rateArtList').innerHTML = h || '<p>Belum ada karya.</p>';
+        });
+    }
+    function voteArt(key, team) {
+        db.ref(`rate_art/${key}/voters/${myUser.name}`).set(true);
+        let target = team === 'A' ? 'votesA' : 'votesB';
+        db.ref(`rate_art/${key}/${target}`).transaction(current => (current || 0) + 1);
+        setTimeout(openRateArt, 500);
+    }
+
+    // --- GAME ROOM & MATCHMAKING FULL ---
+    function updateMaxPlayersUI() { 
+        let m = document.getElementById('hostGameMode').value;
+        document.getElementById('hostMaxPlayers').style.display = m === 'battle' ? 'block' : 'none'; 
+        document.getElementById('hostDrawTime').style.display = (m === 'battle' || m === 'coop') ? 'block' : 'none'; 
+        if(m === 'coop') document.getElementById('hostDrawTime').value = "200";
+    }
+
+    function createRoom() {
+        if(!db) return showModal("Offline", "Koneksi database tidak tersedia.");
+        const name = document.getElementById('hostRoomName').value || 'Room Mabar';
+        const pass = document.getElementById('hostRoomPass').value;
+        const mode = document.getElementById('hostGameMode').value;
+        const maxP = mode === 'guess' ? 2 : (mode === 'coop' ? 4 : parseInt(document.getElementById('hostMaxPlayers').value)); 
+        const drawTime = (mode === 'battle' || mode === 'coop') ? parseInt(document.getElementById('hostDrawTime').value) : 60;
+        
+        currentRoomId = db.ref('rooms').push().key; isHost = true; let pData = {}; pData[myUser.name] = myUser;
+        db.ref('rooms/'+currentRoomId).set({ name, password: pass, status: 'waiting_private', mode, maxPlayers: maxP, drawTime: drawTime, players: pData, phase: 'lobby' }); 
+        db.ref('rooms/'+currentRoomId).onDisconnect().remove(); 
+        showScreen('screen-lobby'); listenToRoom();
+    }
+
+    function loadRooms() {
+        if(!db) return showModal("Offline", "Koneksi database tidak tersedia.");
+        document.getElementById('roomListDiv').innerHTML = 'Mencari...';
+        db.ref('rooms').orderByChild('status').equalTo('waiting_private').once('value', snap => {
+            let h = ''; if(snap.exists()) { snap.forEach(c => { 
+                let d = c.val(); let pCount = d.players ? Object.keys(d.players).length : 0;
+                if(pCount < d.maxPlayers) {
+                    h += `<div class="room-item"><div><b>${d.name}</b> ${d.password?'<i class="fa-solid fa-lock"></i>':''}<br><span style="font-size:11px; opacity:0.7;">Mode: ${d.mode.toUpperCase()} | ${pCount}/${d.maxPlayers} Pemain</span></div><button class="btn-green" onclick="promptJoin('${c.key}', '${d.password||''}')">Join</button></div>`;
+                }
+            }); }
+            document.getElementById('roomListDiv').innerHTML = h || 'Tidak ada room tersedia.';
+        });
+    }
+
+    // MATCHMAKING CEPAT (Cari Cepat)
+    function quickMatch() {
+        if(!db) return showModal("Offline", "Koneksi database tidak tersedia.");
+        showToast("Sedang mencari room kosong...");
+        db.ref('rooms').orderByChild('status').equalTo('waiting_private').once('value', snap => {
+            let foundRoom = null;
+            if(snap.exists()) {
+                snap.forEach(c => {
+                    let d = c.val(); let pCount = d.players ? Object.keys(d.players).length : 0;
+                    // Syarat: Room publik (tanpa password) & masih muat
+                    if(pCount < d.maxPlayers && (!d.password || d.password === '')) { foundRoom = c.key; return true; } // return true to break forEach
+                });
+            }
+            if(foundRoom) { joinRoomData(foundRoom); } 
+            else { showModal("Matchmaking", "Tidak ada room publik yang kosong saat ini. Silakan buat Room sendiri!"); }
+        });
+    }
+
+    let targetJoin = {}; 
+    function promptJoin(id, pass) { targetJoin = {id, pass}; if(pass) showModal('Masukkan Password Room', '', 'prompt', 'processJoin'); else joinRoomData(id); }
+    function processJoin() { let inp = document.getElementById('modalInput').value; if(inp===targetJoin.pass) { closeModal(); joinRoomData(targetJoin.id); } else showModal("Gagal", "Password salah!"); }
+    
+    function joinRoomData(id) { 
+        currentRoomId = id; isHost = false; myRole = '';
+        db.ref(`rooms/${id}/players/${myUser.name}`).set(myUser); 
+        db.ref(`rooms/${id}/players/${myUser.name}`).onDisconnect().remove(); 
+        showScreen('screen-lobby'); listenToRoom(); 
+    }
+    
+    function leaveRoom() { 
+        if(currentRoomId && db) { 
+            if(myRole === 'spectator') { /* Do nothing for spectator leave */ }
+            else if(isHost) db.ref('rooms/'+currentRoomId).remove(); 
+            else db.ref(`rooms/${currentRoomId}/players/${myUser.name}`).remove(); 
+        } 
+        window.location.reload(); 
+    }
+
+    function listenToRoom() {
+        if(roomListener) db.ref('rooms/'+currentRoomId).off('value', roomListener);
+        roomListener = db.ref('rooms/'+currentRoomId).on('value', snap => {
+            const d = snap.val(); if(!d) { showModal("Info", "Room ditutup oleh Host."); showScreen('screen-home'); return; }
+            
+            document.getElementById('lobbyRoomName').innerText = d.name;
+            let pKeys = Object.keys(d.players || {});
+            let ui = ''; pKeys.forEach(k => ui += `<div class="player-badge" onclick="showProfileCard('${d.players[k].name}')"><img src="${d.players[k].avatar}"> ${d.players[k].name}</div>`);
+            document.getElementById('lobbyPlayers').innerHTML = ui;
+            
+            if(isHost && d.phase === 'lobby') { 
+                let ready = (d.mode==='guess' && pKeys.length===2) || (d.mode==='battle' && pKeys.length>=2) || (d.mode==='coop' && pKeys.length===4);
+                document.getElementById('btnStartGame').style.display = ready ? 'block' : 'none'; 
+            }
+            
+            if(d.phase === 'shuffling' && d.mode === 'coop') { showCoopShuffle(d); }
+            if(d.phase === 'playing' && document.getElementById('screen-lobby').classList.contains('active')) { initGameEngine(d); }
+        });
+    }
+
+    function showCoopShuffle(data) {
+        showScreen('screen-game'); document.getElementById('coopShuffleOverlay').style.display = 'flex';
+        document.getElementById('teamANames').innerText = data.teams.A.join(" & "); document.getElementById('teamBNames').innerText = data.teams.B.join(" & ");
+        if(isHost && data.timer === undefined) { 
+            db.ref(`rooms/${currentRoomId}/timer`).set(4);
+            setTimeout(() => { db.ref(`rooms/${currentRoomId}`).update({ phase: 'playing', word: wordsDB[Math.floor(Math.random()*wordsDB.length)] }); runServerTimer(data.drawTime || 200); }, 4000);
+        }
+    }
+
+    function runServerTimer(dur) { clearInterval(hostTimerInterval); let t = dur; hostTimerInterval = setInterval(() => { t--; db.ref(`rooms/${currentRoomId}/timer`).set(t); if(t <= 0) { clearInterval(hostTimerInterval); playSFX('sfxWaktu'); handleTimeUp(); } }, 1000); }
+    function handleTimeUp() {
+        db.ref(`rooms/${currentRoomId}`).once('value', snap => { 
+            const d = snap.val(); if(!d) return; 
+            if (d.mode === 'coop' && d.phase === 'playing') { db.ref(`rooms/${currentRoomId}`).update({ phase: 'collecting', timer: 5 }); runServerTimer(5); }
+            else if (d.mode === 'coop' && d.phase === 'collecting') {
+                if(d.imgA && d.imgB) { db.ref('rate_art').push({ word: d.word, imgA: d.imgA, imgB: d.imgB, votesA:0, votesB:0 }); }
+                db.ref(`rooms/${currentRoomId}`).update({ phase: 'gameover' });
+            }
+            else { db.ref(`rooms/${currentRoomId}`).update({ phase: 'gameover' }); }
+        });
+    }
+
+    function startGame() { 
+        db.ref('rooms/'+currentRoomId).update({status: 'playing'}); // Kunci room agar tak bisa dilist
+        db.ref('rooms/'+currentRoomId).once('value', snap => {
+            let d = snap.val(); let pKeys = Object.keys(d.players);
+            if(d.mode === 'coop') { let shuffled = pKeys.sort(() => 0.5 - Math.random()); db.ref('rooms/'+currentRoomId).update({ phase: 'shuffling', teams: { A: [shuffled[0], shuffled[1]], B: [shuffled[2], shuffled[3]] } }); } 
+            else { let up = { phase: 'playing', word: wordsDB[Math.floor(Math.random() * wordsDB.length)] }; if(d.mode === 'guess') up.currentTurn = pKeys[0]; db.ref('rooms/'+currentRoomId).update(up); runServerTimer(d.drawTime || 60); }
+        });
+    }
+
+    function initGameEngine(data) {
+        showScreen('screen-game'); document.getElementById('coopShuffleOverlay').style.display='none'; document.getElementById('spectatorBadge').style.display = 'none';
+        db.ref(`rooms/${currentRoomId}`).onDisconnect().update({ phase: 'abandoned' });
+        gameMode = data.mode; myUser._rewardClaimed = false;
+        if(gameMode === 'coop') { if(data.teams.A.includes(myUser.name)) myTeam = 'A'; else myTeam = 'B'; }
+        
+        db.ref(`rooms/${currentRoomId}`).on('value', snap => {
+            let d = snap.val(); if(!d) return;
+            if(d.phase === 'abandoned') return forceLeave("Pemain keluar tiba-tiba.");
+            if(d.phase === 'gameover') return processGameOver(d);
+            if(d.timer !== undefined) { document.getElementById('g-timer').innerText = d.timer; document.getElementById('b-timer').innerText = d.timer; }
+            
+            if(gameMode === 'guess') handleGuessUI(d);
+            if(gameMode === 'battle' || gameMode === 'coop') handleBattleUI(d);
+            
+            if(gameMode === 'coop' && d.phase === 'collecting' && d.timer === 4) {
+                canvas.style.pointerEvents = 'none';
+                if(d.teams.A[0] === myUser.name) db.ref(`rooms/${currentRoomId}/imgA`).set(canvas.toDataURL("image/png", 0.5));
+                if(d.teams.B[0] === myUser.name) db.ref(`rooms/${currentRoomId}/imgB`).set(canvas.toDataURL("image/png", 0.5));
+                document.getElementById('word-display').innerText = "MENYIMPAN KARYA...";
+            }
+        });
+        
+        // Listen Canvas Drawing Events
+        db.ref(`rooms/${currentRoomId}/drawing`).on('child_added', snap => {
+            let p = snap.val(); if(gameMode === 'coop' && p.team !== myTeam) return;
+            if(p.name !== myUser.name || (myRole === 'guesser' && gameMode === 'guess')) {
+                ctx.lineWidth = p.w || 4; ctx.strokeStyle = p.c; ctx.lineCap = "round";
+                if(p.t === 's') { ctx.beginPath(); ctx.moveTo(p.x, p.y); }
+                else if(p.t === 'd') { ctx.lineTo(p.x, p.y); ctx.stroke(); }
+                else if(p.t === 'f') { floodFill(p.x, p.y, hexToRgb(p.c)); playSFX('sfxCat'); }
+            }
+        });
+        db.ref(`rooms/${currentRoomId}/clear`).on('value', snap => { if(snap.val() && (!snap.val().team || snap.val().team === myTeam)) ctx.clearRect(0,0,canvas.width,canvas.height); });
+        
+        // Listen Chat Guess
+        db.ref(`rooms/${currentRoomId}/chats`).on('child_added', snap => { let chat = snap.val(); let div = document.createElement('div'); div.className = 'chat-msg'; if(chat.sys) div.innerHTML = `<div class="sys-msg">${chat.txt}</div>`; else div.innerHTML = `<img src="${chat.ava}"> <b>${chat.name}:</b> ${chat.txt}`; const cb = document.getElementById('chatBox'); cb.appendChild(div); cb.scrollTop = cb.scrollHeight; });
+    }
+
+    function handleGuessUI(data) {
+        document.getElementById('sb-guess').style.display = 'flex'; document.getElementById('sb-battle').style.display = 'none';
+        let pKeys = Object.keys(data.players); let p1 = pKeys[0]; let p2 = pKeys[1];
+        document.getElementById('g-p1-name').innerText = p1; document.getElementById('g-p1-img').src = data.players[p1].avatar;
+        document.getElementById('g-p2-name').innerText = p2; document.getElementById('g-p2-img').src = data.players[p2].avatar;
+        
+        if (data.currentTurn === myUser.name) { myRole = 'drawer'; document.getElementById('drawTools').style.display = 'block'; document.getElementById('guessArea').style.display = 'none'; document.getElementById('word-display').innerText = "Gambar: " + data.word; canvas.style.pointerEvents = 'auto'; } 
+        else { myRole = 'guesser'; document.getElementById('drawTools').style.display = 'none'; document.getElementById('guessArea').style.display = 'block'; document.getElementById('guessInput').style.display='inline-block'; document.getElementById('word-display').innerText = "Tebak gambarnya!"; canvas.style.pointerEvents = 'none'; targetWord = data.word; }
+    }
+    
+    function submitGuess() {
+        let val = document.getElementById('guessInput').value.trim(); if(!val) return; document.getElementById('guessInput').value = '';
+        db.ref(`rooms/${currentRoomId}/chats`).push({ name: myUser.name, ava: myUser.avatar, txt: val });
+        if(val.toLowerCase() === targetWord.toLowerCase()) { playSFX('sfxMenang'); db.ref(`rooms/${currentRoomId}/chats`).push({ sys: true, txt: `🎉 ${myUser.name} menebak dengan benar!` }); db.ref(`rooms/${currentRoomId}`).update({ phase: 'gameover' }); }
+    }
+
+    function handleBattleUI(data) {
+        document.getElementById('sb-guess').style.display = 'none'; document.getElementById('sb-battle').style.display = 'flex';
+        myRole = 'drawer'; document.getElementById('drawTools').style.display = 'block'; document.getElementById('guessArea').style.display = 'none'; canvas.style.pointerEvents = 'auto';
+        
+        if(targetWord !== data.word) {
+            targetWord = data.word; ctx.clearRect(0,0,canvas.width,canvas.height);
+            document.getElementById('battleTitle').innerHTML = gameMode === 'coop' ? `<i class="fa-solid fa-users"></i> TIM ${myTeam}` : `<i class="fa-solid fa-fire"></i> BATTLE`;
+            document.getElementById('word-display').innerText = "GAMBAR: " + targetWord.toUpperCase();
+        }
+    }
+    
+    function processGameOver(data) {
+        document.getElementById('votingArea').style.display = 'block'; document.getElementById('canvasArea').style.display = 'none'; document.getElementById('sb-battle').style.display = 'none'; document.getElementById('sb-guess').style.display = 'none'; document.getElementById('drawTools').style.display = 'none'; document.getElementById('word-display').style.display = 'none';
+        
+        let h = `<h2 style="color:var(--primary); margin-bottom:5px;"><i class="fa-solid fa-check-circle"></i> Selesai!</h2>`;
+        if(data.mode === 'coop') {
+            h += `<p style="font-size:13px;">Karya dikirim ke Galeri <b>Rate Art</b>.</p>
+                 <div style="display:flex; justify-content:center; gap:10px; margin:15px 0;">
+                    <div style="width:48%"><div style="font-size:11px;font-weight:bold;margin-bottom:5px">TIM A</div><img src="${data.imgA||''}" style="width:100%; border-radius:10px; border:2px solid #ccc; background:#fff"></div>
+                    <div style="width:48%"><div style="font-size:11px;font-weight:bold;margin-bottom:5px">TIM B</div><img src="${data.imgB||''}" style="width:100%; border-radius:10px; border:2px solid #ccc; background:#fff"></div>
+                 </div>`;
+        } else { h += `<p>Permainan telah berakhir.</p>`; }
+        
+        if(!myUser._rewardClaimed && myRole !== 'spectator') {
+            myUser.totalGames = (myUser.totalGames||0) + 1;
+            if(data.mode !== 'guess' || myRole === 'guesser') { myUser.coins += 50; myUser.wins = (myUser.wins||0) + 1; h += `<p style="font-size:12px; font-weight:bold; color:var(--gold);">+50 Koin & +1 Win!</p>`; }
+            saveLocal(); myUser._rewardClaimed = true; playSFX('sfxMenang');
+        }
+        document.getElementById('votingArea').innerHTML = h;
+    }
+    function forceLeave(msg) { showModal('Pemberitahuan', msg, 'custom', '<button class="btn-green" onclick="window.location.reload()">OK</button>'); }
+
+    // --- CANVAS TOOLS ---
+    function setupColors() {
+        let pal = document.getElementById('colorPalette');
+        const drawColors = ['#000000', '#EF4444', '#F59E0B', '#10B981', '#3B82F6', '#8B5CF6', '#EC4899', '#6B7280', '#FFFFFF', '#8B4513', '#FFD700', '#00FFFF'];
+        drawColors.forEach(c => { let b = document.createElement('div'); b.className = 'color-btn'; b.style.background = c; if(c === '#000000') b.classList.add('active'); b.onclick = () => { document.querySelectorAll('.color-btn').forEach(e=>e.classList.remove('active')); b.classList.add('active'); currentColor = c; ctx.strokeStyle = c; if(currentTool==='eraser') setTool('brush'); }; pal.appendChild(b); });
+    }
+    function setTool(t) { currentTool = t; document.querySelectorAll('.tool-btn').forEach(e=>e.classList.remove('active')); if(t==='brush') { document.getElementById('btnBrush').classList.add('active'); ctx.strokeStyle = currentColor; } if(t==='bucket') { document.getElementById('btnBucket').classList.add('active'); } if(t==='eraser') { document.getElementById('btnEraser').classList.add('active'); ctx.strokeStyle = '#FFFFFF'; } }
+    function clearCanvasEvent() { ctx.clearRect(0,0,canvas.width,canvas.height); db.ref(`rooms/${currentRoomId}/clear`).set({t:Date.now(), team:myTeam}); }
+
+    function getPos(e) { const r = canvas.getBoundingClientRect(); const sX = canvas.width/r.width, sY = canvas.height/r.height; let cX = e.touches ? e.touches[0].clientX : e.clientX; let cY = e.touches ? e.touches[0].clientY : e.clientY; return { x: Math.floor((cX-r.left)*sX), y: Math.floor((cY-r.top)*sY) }; }
+    
+    canvas.addEventListener('mousedown', startAction); canvas.addEventListener('mousemove', moveAction); window.addEventListener('mouseup', endAction);
+    canvas.addEventListener('touchstart', (e)=>{e.preventDefault(); startAction(e);}, {passive:false}); canvas.addEventListener('touchmove', (e)=>{e.preventDefault(); moveAction(e);}, {passive:false}); canvas.addEventListener('touchend', endAction);
+    
+    function startAction(e) { 
+        if(canvas.style.pointerEvents === 'none' || myRole!=='drawer') return; 
+        let p = getPos(e); let bW = document.getElementById('brushSize').value; 
+        if(currentTool === 'bucket') { floodFill(p.x, p.y, hexToRgb(currentColor)); playSFX('sfxCat'); db.ref(`rooms/${currentRoomId}/drawing`).push({ t:'f', x:p.x, y:p.y, c:currentColor, name:myUser.name, team:myTeam }); } 
+        else { isDrawing = true; ctx.beginPath(); ctx.moveTo(p.x, p.y); db.ref(`rooms/${currentRoomId}/drawing`).push({ t:'s', x:p.x, y:p.y, c: (currentTool==='eraser'?'#FFFFFF':currentColor), w: bW, name:myUser.name, team:myTeam }); } 
+    }
+    function moveAction(e) { if(!isDrawing || currentTool === 'bucket') return; let p = getPos(e); ctx.lineWidth = document.getElementById('brushSize').value; ctx.lineCap = "round"; ctx.lineTo(p.x, p.y); ctx.stroke(); db.ref(`rooms/${currentRoomId}/drawing`).push({ t:'d', x:p.x, y:p.y, c: (currentTool==='eraser'?'#FFFFFF':currentColor), w: ctx.lineWidth, name:myUser.name, team:myTeam }); }
+    function endAction() { isDrawing = false; }
+    
+    function hexToRgb(h) { let r=0,g=0,b=0; if(h.length===7){ r=parseInt(h.substring(1,3),16); g=parseInt(h.substring(3,5),16); b=parseInt(h.substring(5,7),16); } return [r,g,b,255]; }
+    function floodFill(startX, startY, fColor) { let w = canvas.width, h = canvas.height; let img = ctx.getImageData(0,0,w,h); let d = img.data; let sIdx = (startY * w + startX) * 4; let sR = d[sIdx], sG = d[sIdx+1], sB = d[sIdx+2], sA = d[sIdx+3]; if(sR===fColor[0] && sG===fColor[1] && sB===fColor[2] && sA===fColor[3]) return; let stack = [[startX, startY]]; while(stack.length) { let [x, y] = stack.pop(); let idx = (y * w + x) * 4; if(x>=0 && x<w && y>=0 && y<h && d[idx]===sR && d[idx+1]===sG && d[idx+2]===sB && d[idx+3]===sA) { d[idx]=fColor[0]; d[idx+1]=fColor[1]; d[idx+2]=fColor[2]; d[idx+3]=fColor[3]; stack.push([x+1,y], [x-1,y], [x,y+1], [x,y-1]); } } ctx.putImageData(img,0,0); }
+</script>
+
+</body>
+</html>
